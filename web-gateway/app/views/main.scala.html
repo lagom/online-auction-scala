@@ -1,0 +1,48 @@
+@import com.example.auction.item.api.ItemStatus
+@import java.util.Locale
+
+@(title: String)(content: Html)(implicit nav: Nav)
+
+<html>
+    <head>
+        <title>@title</title>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("lib/foundation/dist/foundation.min.css")"/>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("lib/foundation-icon-fonts/foundation-icons.css")"/>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("main.css")"/>
+    </head>
+    <body>
+        <nav class="top-bar">
+            <div class="top-bar-left">
+                <ul class="menu">
+                    <li><a href="@routes.Main.index()">@Messages("lagomAuction")</a></li>
+                    <li><a href="@routes.Main.createUserForm()">@Messages("createUser")</a></li>
+                    <li><a href="@routes.ItemController.createItemForm()">@Messages("createItem")</a></li>
+                </ul>
+            </div>
+            <div class="top-bar-right">
+                <ul class="menu dropdown" data-dropdown-menu>
+                    <li>
+                        <a href="@routes.ProfileController.myItems(ItemStatus.Created.toString.toLowerCase(Locale.ENGLISH), None, None)">
+                            @nav.user.map(_.name).getOrElse(Messages("logInAs"))</a>
+                        <ul class="menu vertical">
+                        @for(user <- nav.users) {
+                            <li><a href="#" data-user-id="@user.id" class="log-in-as">@user.name</a></li>
+                        }
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <article class="row">
+            <div class="small-12">
+            @content
+            </div>
+        </article>
+        <script type="text/javascript" src="@routes.Assets.at("lib/jquery/jquery.min.js")"></script>
+        <script type="text/javascript" src="@routes.Assets.at("lib/foundation/dist/foundation.min.js")"></script>
+        <script type="text/javascript" src="@routes.Assets.at("main.js")"></script>
+        <script>
+                $(document).foundation();
+        </script>
+    </body>
+</html>

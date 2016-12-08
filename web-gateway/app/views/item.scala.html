@@ -1,0 +1,147 @@
+@import com.example.auction.item.api.Item
+@import com.example.auction.item.api.ItemStatus
+@import com.example.auction.user.api.User
+@import com.example.auction.bidding.api.BidResult
+@import com.example.auction.bidding.api.BidResultStatus._
+@import java.util.UUID
+@import controllers.{Currency => Currencies}
+
+@(item: Item, bidForm: Form[BidForm], biddingHistory: Seq[AnonymousBid], currentUser: UUID, currency: Currencies,
+        seller: User, winner: Option[User], currentMaximumBid: Option[Int], bidResult: Option[BidResult])(implicit nav: Nav)
+
+@renderBidResult(icon: String, callout: String, bidMessage: String, result: BidResult) = {
+    
+    <div class="@callout callout">
+        <i class="fi-@icon"></i> @Messages(bidMessage, currency.format(result.currentPrice))
+    </div>
+}
+
+@main(item.title) {
+
+    <h1>@item.title</h1>
+
+    @for(result <- bidResult) {
+        @result.status match {
+            case Accepted => {
+                @renderBidResult("like", "success", "bidAcceptedMessage", result)
+            }
+            case AcceptedOutbid => {
+                @renderBidResult("dislike", "warning", "bidAcceptedOutbidMessage", result)
+            }
+            case AcceptedBelowReserve => {
+                @renderBidResult("dislike", "warning", "bidAcceptedBelowReserveMessage", result)
+            }
+            case TooLow => {
+                @renderBidResult("alert", "alert", "bidTooLowMessage", result)
+            }
+            case NotStarted => {
+                @renderBidResult("alert", "alert", "bidNotStartedMessage", result)
+            }
+            case Finished => {
+                @renderBidResult("alert", "alert", "bidFinishedMessage", result)
+            }
+            case Cancelled => {
+                @renderBidResult("alert", "alert", "bidCancelledMessage", result)
+            }
+        }
+    }
+
+    <p>
+        @item.description
+    </p>
+
+    <dl>
+        <dt>@Messages("seller")</dt>
+        <dd>@seller.name</dd>
+
+        <dt>@Messages("currency")</dt>
+        <dd>@currency.getDisplayName</dd>
+
+        <dt>@Messages("increment")</dt>
+        <dd>@currency.format(item.increment)</dd>
+
+    @if(currentUser == item.creator) {
+        <dt>@Messages("reserve")</dt>
+        <dd>@currency.format(item.reservePrice)</dd>
+    }
+
+        <dt>@Messages("duration")</dt>
+        <dd>@nav.formatDuration(item.auctionDuration)</dd>
+
+    @if(item.status == ItemStatus.Auction || item.status == ItemStatus.Completed) {
+        <dt>@Messages("auctionStart")</dt>
+        <dd>@item.auctionStart.map(nav.formatInstant)</dd>
+
+        <dt>@Messages("auctionEnd")</dt>
+        <dd>@item.auctionEnd.map(nav.formatInstant)</dd>
+    }
+
+    @if(item.status == ItemStatus.Auction) {
+        <dt>@Messages("currentPrice")</dt>
+        <dd>@item.price.map(currency.format)</dd>
+    }
+
+    @if(item.status == ItemStatus.Completed) {
+        <dt>@Messages("finalPrice")</dt>
+        <dd>@item.price.map(currency.format)</dd>
+
+        @for(w <- winner) {
+            @if(currentUser == item.creator || currentUser == w) {
+                <dt>@Messages("auctionWinner")</dt>
+                <dd>@w.name</dd>
+            }
+        }
+    }
+    </dl>
+
+    @if(currentUser == item.creator && item.status == ItemStatus.Created) {
+        <form action="@routes.ItemController.startAuction(item.safeId)" method="POST">
+            <input class="button success" type="submit" value="@Messages("startAuction")"/>
+        </form>
+    }
+    @if(currentUser != item.creator && item.status == ItemStatus.Auction) {
+        <h3>@Messages("placeBid")</h3>
+        @for(maxBid <- currentMaximumBid) {
+            <div class="success callout">
+                @Messages("currentWinningBidderMessage", currency.format(maxBid))
+            </div>
+        }
+        @foundationForm(bidForm, routes.ItemController.placeBid(item.safeId)) {
+            @helper.inputText(bidForm("bid"), 'type -> "number", 'step -> currency.formatDecimal(item.increment),
+                'min -> currency.formatDecimal(item.price.getOrElse(0) + item.increment))
+            <input type="hidden" name="currency" value="@item.currencyId"/>
+            <input class="button success" type="submit" value="@Messages("placeBid")"/>
+        }
+    }
+
+    @if(item.status == ItemStatus.Auction || item.status == ItemStatus.Completed) {
+        <h3>@Messages("biddingHistory")</h3>
+        @if(biddingHistory.isEmpty) {
+            <em>@Messages("noBidsPlaced")</em>
+        } else {
+            <table>
+                <thead>
+                    <tr>
+                        <th>@Messages("bidTime")</th>
+                        <th>@Messages("bidder")</th>
+                        <th>@Messages("bid")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(bid <- biddingHistory) {
+                    <tr>
+                        <td>@nav.formatInstant(bid.bidTime)</td>
+                        <td>@if(bid.isYou) {
+                            <strong>@Messages("youBidder")</strong>
+                        } else {
+                            @Messages("anonymousBidder", bid.bidder)
+                        }</td>
+                        <td>@currency.format(bid.bidPrice)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+        }
+    }
+}

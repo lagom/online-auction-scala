@@ -1,0 +1,67 @@
+@import com.example.auction.item.api.ItemStatus
+@import com.example.auction.item.api.ItemSummary
+@import com.example.auction.utils.PaginatedSequence
+@import controllers.Currency
+
+@import java.util.Locale
+@(status: ItemStatus.Status, paginatedItems: PaginatedSequence[ItemSummary])(implicit nav: Nav)
+
+@for(user <- nav.user) {
+    @main(user.name) {
+        <h1>@user.name</h1>
+
+        <div class="row">
+            <ul class="menu vertical large-3 columns">
+            @for(menuStatus <- ItemStatus.values) {
+                <li class="@if(menuStatus == status) {active}">
+                    <a href="@routes.ProfileController.myItems(menuStatus.toString.toLowerCase(Locale.ENGLISH), None, None)">@Messages("items." + menuStatus)</a>
+                </li>
+            }
+            </ul>
+
+            <div class="large-9 columns">
+            @if(paginatedItems.isEmpty) {
+                <em>@Messages("noItems." + status)</em>
+            } else {
+                <table>
+                    <caption>@Messages("items.caption", Messages("items." + status), paginatedItems.count)</caption>
+
+                    <thead>
+                        <tr>
+                            <th>@Messages("title")</th>
+                            <th>@Messages("status")</th>
+                            <th>@Messages("currency")</th>
+                            <th>@Messages("reserve")</th>
+                            <th><!-- Start auction--></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    @for(item <- paginatedItems.items) {
+                        @defining(Currency.valueOf(item.currencyId)) { currency =>
+                            <tr>
+                                <td>
+                                    <a href="@routes.ItemController.getItem(item.id)">@item.title</a>
+                                </td>
+                                <td>@item.status</td>
+                                <td>@currency.getDisplayName</td>
+                                <td>@currency.format(item.reservePrice)</td>
+                                <td>
+                                @if(item.status == ItemStatus.Created) {
+                                    <form action="@routes.ItemController.startAuction(item.id)" method="POST">
+                                        <input class="button success" type="submit" value="@Messages("startAuction")"/>
+                                    </form>
+                                }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+
+                @paginate(paginatedItems)((pageNumber, pageSize) => routes.ProfileController.myItems(status.toString.toLowerCase(Locale.ENGLISH), Some(pageNumber), Some(pageSize)))
+            }
+            </div>
+        </div>
+    }
+}

@@ -1,0 +1,17 @@
+@import helper._
+
+@(createUser: Form[CreateUserForm])(implicit nav: Nav)
+
+@main(Messages("createUser")) {
+
+    <h2>@Messages("createUser")</h2>
+
+    @foundationForm(createUser, routes.Main.createUser()) {
+        <div class="row">
+            <div class="medium-6 columns">
+                @inputText(createUser("name"))
+            </div>
+        </div>
+        <input class="button" type="submit" value="@Messages("createUser")"/>
+    }
+}

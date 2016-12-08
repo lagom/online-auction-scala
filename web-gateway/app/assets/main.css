@@ -1,0 +1,30 @@
+article {
+    padding-top: 10px;
+}
+
+form small.error {
+    color: darkred;
+    background: lightcoral;
+}
+
+form label.error {
+    color: #ec5840;
+}
+
+form .error input {
+    border-color: #ec5840;
+    background: rgba(236, 88, 64, 0.1);
+}
+
+form label.error span.error {
+    font-weight: bold;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    display: block;
+}
+
+/* Override a Foundation style that throws off table alignment */
+table td .button {
+    margin: 0;
+}

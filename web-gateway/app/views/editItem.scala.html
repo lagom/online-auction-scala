@@ -1,0 +1,47 @@
+@import helper._
+@import java.time.temporal.ChronoUnit
+@import controllers.{Currency => Currencies}
+
+@(itemForm: Form[ItemForm])(implicit nav: Nav)
+
+@main(Messages("createItem")) {
+
+    <h2>@Messages("createItem")</h2>
+
+    @foundationForm(itemForm, routes.ItemController.createItem()) {
+        <div class="column row">
+            @inputText(itemForm("title"))
+        </div>
+        <div class="column row">
+            @textarea(itemForm("description"))
+        </div>
+        <div class="column row">
+            @select(
+                field = itemForm("currency"),
+                options = Currencies.values.map(c => c.name -> c.getDisplayName).sortBy(_._2)
+            )
+        @* todo set min and step according to the selected currency *@
+        </div>
+        <div class="row">
+            <div class="medium-6 columns">
+                @inputText(itemForm("increment"), 'type -> "number", 'min -> 0.5, 'step -> 0.5, '_help -> Messages("incrementHelp"))
+            </div>
+            <div class="medium-6 columns">
+                @inputText(itemForm("reserve"), 'type -> "number", 'min -> 0, 'step -> 0.5, '_help -> Messages("reserveHelp"))
+            </div>
+        </div>
+        <div class="row">
+            <div class="medium-6 columns">
+                @inputText(itemForm("duration"), 'type -> "number", 'min -> 1, 'step -> 1, '_columns -> 3)
+            </div>
+            <div class="medium-6 columns">
+                @select(
+                    field = itemForm("durationUnits"),
+                    options = ChronoUnit.values().dropWhile(_ != ChronoUnit.SECONDS).takeWhile(_ != ChronoUnit.MONTHS).map(u => u.name() -> u.toString()),
+                    '_columns -> 3
+                )
+            </div>
+        </div>
+        <input type="submit" class="button" value="@Messages("createItem")"/>
+    }
+}

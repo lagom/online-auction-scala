@@ -1,0 +1,14 @@
+@import views.html.helper.FieldElements
+
+@(elements: FieldElements)
+@defining(elements.args.getOrElse('_id, elements.id + "Field")) { id =>
+    <label class="@elements.args.get('_class) @if(elements.hasErrors) {error}"
+    id="@id" @if(elements.infos){ aria-describedby="@{id}HelpText" }>
+        @if(elements.hasName) {@elements.name} else {@elements.label}
+        @elements.input
+        @elements.errors.map { error =><span class="error">@error</span>
+        }
+    </label>
+    @for(info <- elements.infos) {<p class="help-text" id="@{id}HelpText">@info</p>
+    }
+}

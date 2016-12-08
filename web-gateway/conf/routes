@@ -1,0 +1,19 @@
+
+GET         /                           controllers.Main.index
+
+# User management
+GET         /createuser                 controllers.Main.createUserForm
+POST        /user                       controllers.Main.createUser
+POST        /currentuser/:userId        controllers.Main.currentUser(userId: java.util.UUID)
+
+# User profile
+GET         /my/items/:status           controllers.ProfileController.myItems(status, page: Option[Int], pageSize: Option[Int])
+
+# Items
+GET         /createitem                 controllers.ItemController.createItemForm
+POST        /item                       controllers.ItemController.createItem
+GET         /item/:id                   controllers.ItemController.getItem(id: java.util.UUID)
+POST        /item/:id/auction           controllers.ItemController.startAuction(id: java.util.UUID)
+POST        /item/:id/bid               controllers.ItemController.placeBid(id: java.util.UUID)
+
+GET         /assets/*file               controllers.Assets.at(path = "/public", file)

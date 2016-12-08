@@ -1,0 +1,71 @@
+lagomAuction=Lagom Auction
+logInAs=Log in as...
+
+formErrors=There are some errors in your form.
+
+name=Name
+createUser=Create user
+
+title=Title
+description=Description
+currency=Currency
+increment=Minimum bid increment
+incrementHelp=When someone makes a bid, their bid must be at least this much more than the current winning bid.
+reserve=Reserve price
+reserveHelp=The reserve is the minimum price that the auction must reach in order for the item to be won by someone.
+status=Auction status
+duration=Auction duration
+durationUnits=Units
+createItem=Create item
+
+invalid.increment=The increment must be a multiple of 0.5.
+invalid.reserve=The reserve must be a multiple of 0.5.
+
+seller=Seller
+auctionStart=Auction start
+auctionEnd=Auction end
+currentPrice=Current price
+finalPrice=Final price
+auctionWinner=Auction winner
+startAuction=Start auction
+
+bidAcceptedMessage=Congratulations! Your bid has been accepted, and you are the highest bidder, with a current price of {0}.
+bidAcceptedOutbidMessage=Your bid has been accepted, however you have been outbid by another bidder. The current price is {0}.
+bidAcceptedBelowReserveMessage=Your bid has been accepted, however it is below the reserve price for this auction. The current price is {0}.
+bidTooLowMessage=Your bid was not at least the increment above the current price of {0}.
+bidNotStartedMessage=The auction has not started.
+bidFinishedMessage=The auction has already finished.
+bidCancelledMessage=The auction has been cancelled.
+
+bid=Bid price
+placeBid=Place bid
+currentWinningBidderMessage=You are the current highest bidder, with a maximum bid of {0}. You can change your maximum bid by placing another bid, \
+  either up or down to the current bid price.
+
+biddingHistory=Bidding history
+noBidsPlaced=No bids placed
+
+bidTime=Bid time
+bidder=Bidder
+youBidder=you
+anonymousBidder=Bidder {0}
+
+durationSeconds={0,choice, 1#1 second|1<{0,number} seconds}
+durationMinutes={0,choice, 1#1 minute|1<{0,number} minutes}
+durationHours={0,choice, 1#1 hour|1<{0,number} hours}
+durationDays={0,choice, 1#1 day|1<{0,number} days}
+durationWeeks={0,choice, 1#1 week|1<{0,number} weeks}
+
+my.auctions=My auctions
+noItems.Created=No items awaiting auction
+items.Created=Awaiting auction
+noItems.Auction=No items under auction
+items.Auction=Under auction
+noItems.Completed=No completed auctions
+items.Completed=Completed auctions
+noItems.Cancelled=No cancelled auctions
+items.Cancelled=Cancelled auctions
+items.caption={0} ({1})
+
+pagination.prev=Previous
+pagination.next=Next

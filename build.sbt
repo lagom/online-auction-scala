@@ -1,5 +1,5 @@
 lazy val root = (project in file("."))
-  .settings(name := "online-auction-java")
+  .settings(name := "online-auction-scala")
   .aggregate(itemApi, itemImpl, biddingApi, biddingImpl, userApi, userImpl, webGateway)
   .settings(commonSettings: _*)
 

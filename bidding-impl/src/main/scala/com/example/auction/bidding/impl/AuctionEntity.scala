@@ -5,7 +5,6 @@ import java.util.UUID
 
 import akka.Done
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag, AggregateEventTagger, PersistentEntity}
-import com.lightbend.lagom.scaladsl.playjson.Jsonable
 import play.api.libs.json.{Format, Json}
 import com.example.auction.utils.JsonFormats._
 import com.lightbend.lagom.scaladsl.api.transport.{TransportErrorCode, TransportException}
@@ -34,7 +33,7 @@ class AuctionEntity extends PersistentEntity {
 
   private def cancelActions = Actions().onCommand[CancelAuction.type, Done] {
     case (CancelAuction, ctx, _) =>
-      ctx.thenPersist(AuctionCancelled, _ => ctx.reply(Done))
+      ctx.thenPersist(AuctionCancelled)(_ => ctx.reply(Done))
   }.onEvent {
     case (AuctionCancelled, state) => state.withStatus(Cancelled)
   }
@@ -51,7 +50,7 @@ class AuctionEntity extends PersistentEntity {
 
       Actions().onCommand[StartAuction, Done] {
         case (StartAuction(auction), ctx, _) =>
-          ctx.thenPersist(AuctionStarted(auction), _ => ctx.reply(Done))
+          ctx.thenPersist(AuctionStarted(auction))(_ => ctx.reply(Done))
       }.onReadOnlyCommand[PlaceBid, PlaceBidResult] {
         case (PlaceBid(_, _), ctx, state) =>
           ctx.reply(createResult(PlaceBidStatus.NotStarted, state))
@@ -77,7 +76,7 @@ class AuctionEntity extends PersistentEntity {
           handlePlaceBidWhileUnderAuction(placeBid, ctx, state)
       }.onCommand[FinishBidding.type, Done] {
         case (FinishBidding, ctx, state) =>
-          ctx.thenPersist(BiddingFinished, _ => ctx.reply(Done))
+          ctx.thenPersist(BiddingFinished)(_ => ctx.reply(Done))
       }.onEvent {
         case (BidPlaced(bid), state) => state.bid(bid)
         case (BiddingFinished, state) => state.withStatus(Complete)
@@ -131,7 +130,7 @@ class AuctionEntity extends PersistentEntity {
   /**
     * The main logic for handling of bids.
     */
-  private def handlePlaceBidWhileUnderAuction(bid: PlaceBid, ctx: CommandContext[PlaceBidResult], state: AuctionState): Persist[AuctionEvent] = {
+  private def handlePlaceBidWhileUnderAuction(bid: PlaceBid, ctx: CommandContext[PlaceBidResult], state: AuctionState): Persist = {
     val AuctionState(Some(auction), _, history) = state
     val now = Instant.now
     // Even though we're not in the finished state yet, we should check
@@ -147,9 +146,9 @@ class AuctionEntity extends PersistentEntity {
         case Some(Bid(currentBidder, _, currentPrice, _)) if bid.bidPrice >= currentPrice && bid.bidder == currentBidder
           && bid.bidPrice >= auction.reservePrice =>
           // Allow the current bidder to update their bid
-          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, currentPrice, bid.bidPrice)), _ =>
+          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, currentPrice, bid.bidPrice))) { _ =>
             ctx.reply(PlaceBidResult(PlaceBidStatus.Accepted, currentPrice, Some(bid.bidder)))
-          )
+          }
 
         case None if bid.bidPrice < auction.increment =>
           reply(ctx, createResult(PlaceBidStatus.TooLow, state))
@@ -160,22 +159,22 @@ class AuctionEntity extends PersistentEntity {
           handleAutomaticOutbid(bid, ctx, auction, now, currentBid)
 
         case _ if bid.bidPrice < auction.reservePrice =>
-          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, bid.bidPrice, bid.bidPrice)), _ =>
+          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, bid.bidPrice, bid.bidPrice))) { _ =>
             ctx.reply(PlaceBidResult(PlaceBidStatus.AcceptedBelowReserve, bid.bidPrice, Some(bid.bidder)))
-          )
+          }
 
         case Some(Bid(_, _, _, currentMaximum)) =>
           val nextIncrement = Math.min(currentMaximum + auction.increment, bid.bidPrice)
-          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, nextIncrement, bid.bidPrice)), _ =>
+          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, nextIncrement, bid.bidPrice))) { _ =>
             ctx.reply(PlaceBidResult(PlaceBidStatus.Accepted, nextIncrement, Some(bid.bidder)))
-          )
+          }
 
         case None =>
           // Ensure that the bid is both at least the reserve, and at least the increment
           val firstBid = Math.max(auction.reservePrice, auction.increment)
-          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, firstBid, bid.bidPrice)), _ =>
+          ctx.thenPersist(BidPlaced(Bid(bid.bidder, now, firstBid, bid.bidPrice))) { _ =>
             ctx.reply(PlaceBidResult(PlaceBidStatus.Accepted, firstBid, Some(bid.bidder)))
-          )
+          }
       }
     }
   }
@@ -186,18 +185,20 @@ class AuctionEntity extends PersistentEntity {
     * This emits two events, one for the bid currently being replace, and another automatic bid for the current bidder.
     */
   private def handleAutomaticOutbid(bid: PlaceBid, ctx: CommandContext[PlaceBidResult], auction: Auction,
-    now: Instant, currentBid: Bid): Persist[AuctionEvent] = {
+    now: Instant, currentBid: Bid): Persist = {
     // Adjust the bid so that the increment for the current maximum makes the current maximum a valid bid
     val adjustedBidPrice = Math.min(bid.bidPrice, currentBid.maximumBid - auction.increment)
     val newBidPrice = adjustedBidPrice + auction.increment
 
-    ctx.thenPersistAll(List(
+    ctx.thenPersistAll(
       BidPlaced(Bid(bid.bidder, now, adjustedBidPrice, bid.bidPrice)),
       BidPlaced(Bid(currentBid.bidder, now, newBidPrice, currentBid.maximumBid))
-    ), () => ctx.reply(PlaceBidResult(PlaceBidStatus.AcceptedOutbid, newBidPrice, Some(currentBid.bidder))))
+    ) { () =>
+      ctx.reply(PlaceBidResult(PlaceBidStatus.AcceptedOutbid, newBidPrice, Some(currentBid.bidder)))
+    }
   }
 
-  private def reply(ctx: CommandContext[PlaceBidResult], result: PlaceBidResult): Persist[AuctionEvent] = {
+  private def reply(ctx: CommandContext[PlaceBidResult], result: PlaceBidResult): Persist = {
     ctx.reply(result)
     ctx.done
   }
@@ -236,7 +237,7 @@ object Auction {
   * @param bidPrice The bid price.
   * @param maximumBid The maximum the bidder is willing to bid.
   */
-case class Bid(bidder: UUID, bidTime: Instant, bidPrice: Int, maximumBid: Int) extends Jsonable
+case class Bid(bidder: UUID, bidTime: Instant, bidPrice: Int, maximumBid: Int)
 
 object Bid {
   implicit val format: Format[Bid] = Json.format
@@ -245,7 +246,7 @@ object Bid {
 /**
   * The auction state.
   */
-case class AuctionState(auction: Option[Auction], status: AuctionStatus.Status, biddingHistory: Seq[Bid]) extends Jsonable {
+case class AuctionState(auction: Option[Auction], status: AuctionStatus.Status, biddingHistory: Seq[Bid]) {
   def withStatus (status: AuctionStatus.Status) = copy(status = status)
   def bid(bid: Bid) = if (biddingHistory.headOption.exists(_.bidder == bid.bidder)) {
     copy(biddingHistory = bid +: biddingHistory.tail)
@@ -273,7 +274,7 @@ object AuctionStatus extends Enumeration {
 /**
   * An auction command.
   */
-trait AuctionCommand extends Jsonable
+trait AuctionCommand
 
 /**
   * Start the auction.
@@ -338,7 +339,7 @@ object PlaceBidStatus extends Enumeration {
   implicit val format: Format[Status] = enumFormat(PlaceBidStatus)
 }
 
-case class PlaceBidResult(status: PlaceBidStatus.Status, currentPrice: Int, currentBidder: Option[UUID]) extends Jsonable
+case class PlaceBidResult(status: PlaceBidStatus.Status, currentPrice: Int, currentBidder: Option[UUID])
 
 object PlaceBidResult {
   implicit val format: Format[PlaceBidResult] = Json.format
@@ -361,7 +362,7 @@ case object GetAuction extends AuctionCommand with ReplyType[AuctionState] {
 /**
   * A persisted auction event.
   */
-trait AuctionEvent extends AggregateEvent[AuctionEvent] with Jsonable {
+trait AuctionEvent extends AggregateEvent[AuctionEvent] {
   override def aggregateTag: AggregateEventTagger[AuctionEvent] = AuctionEvent.Tag
 }
 

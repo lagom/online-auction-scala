@@ -7,11 +7,12 @@ import akka.actor.ActorSystem
 import akka.serialization.SerializationExtension
 import akka.testkit.TestKit
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity.InvalidCommandException
+import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.lightbend.lagom.scaladsl.testkit.PersistentEntityTestDriver
 import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
 
 class ItemEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with OptionValues {
-  private val system = ActorSystem("test")
+  private val system = ActorSystem("test", JsonSerializerRegistry.actorSystemSetupFor(ItemSerializerRegistry))
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)

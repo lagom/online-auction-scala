@@ -1,24 +1,24 @@
 package com.example.auction.bidding.impl
 
-import com.lightbend.lagom.scaladsl.playjson.{SerializerRegistry, Serializers}
+import com.lightbend.lagom.scaladsl.playjson.{JsonSerializerRegistry, JsonSerializer}
 
 import scala.collection.immutable.Seq
 
-class BiddingSerializerRegistry extends SerializerRegistry {
-  override def serializers: Seq[Serializers[_]] = Seq(
+object BiddingSerializerRegistry extends JsonSerializerRegistry {
+  override def serializers: Seq[JsonSerializer[_]] = Seq(
     // State
-    Serializers[AuctionState],
+    JsonSerializer[AuctionState],
     // Commands and replies
-    Serializers[GetAuction.type],
-    Serializers[StartAuction],
-    Serializers[PlaceBid],
-    Serializers[PlaceBidResult],
-    Serializers[FinishBidding.type],
-    Serializers[CancelAuction.type],
+    JsonSerializer[GetAuction.type],
+    JsonSerializer[StartAuction],
+    JsonSerializer[PlaceBid],
+    JsonSerializer[PlaceBidResult],
+    JsonSerializer[FinishBidding.type],
+    JsonSerializer[CancelAuction.type],
     // Events
-    Serializers[AuctionStarted],
-    Serializers[BidPlaced],
-    Serializers[BiddingFinished.type],
-    Serializers[AuctionCancelled.type]
+    JsonSerializer[AuctionStarted],
+    JsonSerializer[BidPlaced],
+    JsonSerializer[BiddingFinished.type],
+    JsonSerializer[AuctionCancelled.type]
   )
 }

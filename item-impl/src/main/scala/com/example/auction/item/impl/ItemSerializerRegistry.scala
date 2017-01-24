@@ -1,20 +1,20 @@
 package com.example.auction.item.impl
 
-import com.lightbend.lagom.scaladsl.playjson.{SerializerRegistry, Serializers}
+import com.lightbend.lagom.scaladsl.playjson.{JsonSerializerRegistry, JsonSerializer}
 
-class ItemSerializerRegistry extends SerializerRegistry {
+object ItemSerializerRegistry extends JsonSerializerRegistry {
   override def serializers = List(
-    Serializers[Item],
+    JsonSerializer[Item],
 
-    Serializers[CreateItem],
-    Serializers[StartAuction],
-    Serializers[UpdatePrice],
-    Serializers[FinishAuction],
-    Serializers[GetItem.type],
+    JsonSerializer[CreateItem],
+    JsonSerializer[StartAuction],
+    JsonSerializer[UpdatePrice],
+    JsonSerializer[FinishAuction],
+    JsonSerializer[GetItem.type],
 
-    Serializers[ItemCreated],
-    Serializers[AuctionStarted],
-    Serializers[PriceUpdated],
-    Serializers[AuctionFinished]
+    JsonSerializer[ItemCreated],
+    JsonSerializer[AuctionStarted],
+    JsonSerializer[PriceUpdated],
+    JsonSerializer[AuctionFinished]
   )
 }

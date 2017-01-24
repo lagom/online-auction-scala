@@ -4,7 +4,7 @@ import com.example.auction.user.api.UserService
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.api.{ServiceAcl, ServiceInfo}
 import com.lightbend.lagom.scaladsl.client.LagomServiceClientComponents
-import com.lightbend.lagom.scaladsl.server.LagomDevModeComponents
+import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import play.api.{ApplicationLoader, BuiltInComponentsFromContext, Mode}
 import play.api.ApplicationLoader.Context
 import play.api.i18n.I18nComponents

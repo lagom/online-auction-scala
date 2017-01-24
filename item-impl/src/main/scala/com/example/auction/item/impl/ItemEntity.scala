@@ -6,7 +6,6 @@ import java.util.UUID
 import akka.Done
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity.ReplyType
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag, PersistentEntity}
-import com.lightbend.lagom.scaladsl.playjson.Jsonable
 import play.api.libs.json.{Format, Json}
 import com.example.auction.utils.JsonFormats._
 
@@ -32,7 +31,7 @@ class ItemEntity extends PersistentEntity {
   private val notCreated = {
     Actions().onCommand[CreateItem, Done] {
       case (CreateItem(item), ctx, state) =>
-        ctx.thenPersist(ItemCreated(item), _ => ctx.reply(Done))
+        ctx.thenPersist(ItemCreated(item))(_ => ctx.reply(Done))
     }.onEvent {
       case (ItemCreated(item), state) => Some(item)
     }.orElse(getItemCommand)
@@ -45,7 +44,7 @@ class ItemEntity extends PersistentEntity {
           ctx.invalidCommand("Only the creator of an auction can start it")
           ctx.done
         } else {
-          ctx.thenPersist(AuctionStarted(Instant.now()), _ => ctx.reply(Done))
+          ctx.thenPersist(AuctionStarted(Instant.now()))(_ => ctx.reply(Done))
         }
     }.onEvent {
       case (AuctionStarted(time), Some(item)) => Some(item.start(time))
@@ -55,10 +54,10 @@ class ItemEntity extends PersistentEntity {
   private def auction(item: Item) = {
     Actions().onCommand[UpdatePrice, Done] {
       case (UpdatePrice(price), ctx, _) =>
-        ctx.thenPersist(PriceUpdated(price), _ => ctx.reply(Done))
+        ctx.thenPersist(PriceUpdated(price))(_ => ctx.reply(Done))
     }.onCommand[FinishAuction, Done] {
       case (FinishAuction(winner, price), ctx, _) =>
-        ctx.thenPersist(AuctionFinished(winner, price), _ => ctx.reply(Done))
+        ctx.thenPersist(AuctionFinished(winner, price))(_ => ctx.reply(Done))
     }.onEvent {
       case (PriceUpdated(price), _) => Some(item.updatePrice(price))
       case (AuctionFinished(winner, price), _) => Some(item.end(winner, price))
@@ -102,7 +101,7 @@ case class Item(
   auctionStart: Option[Instant],
   auctionEnd: Option[Instant],
   auctionWinner: Option[UUID]
-) extends Jsonable {
+) {
   
   def start(startTime: Instant) = {
     assert(status == ItemStatus.Created)
@@ -141,7 +140,7 @@ object Item {
   implicit val format: Format[Item] = Json.format
 }
 
-sealed trait ItemCommand extends Jsonable
+sealed trait ItemCommand
 
 case object GetItem extends ItemCommand with ReplyType[Option[Item]] {
   implicit val format: Format[GetItem.type] = singletonFormat(GetItem)
@@ -171,7 +170,7 @@ object FinishAuction {
   implicit val format: Format[FinishAuction] = Json.format
 }
 
-sealed trait ItemEvent extends AggregateEvent[ItemEvent] with Jsonable {
+sealed trait ItemEvent extends AggregateEvent[ItemEvent] {
   override def aggregateTag = ItemEvent.Tag
 }
 

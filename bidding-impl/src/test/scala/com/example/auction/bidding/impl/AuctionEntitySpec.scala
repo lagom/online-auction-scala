@@ -7,12 +7,14 @@ import java.util.UUID
 import akka.Done
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
+import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.lightbend.lagom.scaladsl.testkit.PersistentEntityTestDriver
 import org.scalatest._
 
 class AuctionEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with Inside {
   
-  private val system = ActorSystem("AuctionEntitySpec")
+  private val system = ActorSystem("AuctionEntitySpec",
+    JsonSerializerRegistry.actorSystemSetupFor(BiddingSerializerRegistry))
   private val itemId = UUID.randomUUID
   private val creator = UUID.randomUUID
   private val bidder1 = UUID.randomUUID

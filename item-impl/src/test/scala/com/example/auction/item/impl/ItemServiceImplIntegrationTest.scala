@@ -8,8 +8,9 @@ import akka.testkit.TestKit
 import com.example.auction.item.api
 import com.example.auction.item.api.{ItemService, ItemSummary}
 import com.example.auction.security.ClientSecurity._
+import com.lightbend.lagom.scaladsl.api.AdditionalConfiguration
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LocalServiceLocator}
-import com.lightbend.lagom.scaladsl.testkit.ServiceTest
+import com.lightbend.lagom.scaladsl.testkit.{ServiceTest, TestTopicComponents}
 import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, Matchers}
 import play.api.Configuration
 import play.api.libs.ws.ahc.AhcWSComponents
@@ -24,10 +25,11 @@ import scala.concurrent.duration._
 class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with BeforeAndAfterAll {
 
   private val server = ServiceTest.startServer(ServiceTest.defaultSetup.withCassandra(true)) { ctx =>
-    new LagomApplication(ctx) with ItemComponents with LocalServiceLocator with AhcWSComponents {
-      override def additionalConfiguration: Configuration = Configuration.from(Map(
-        "cassandra-query-journal.eventual-consistency-delay" -> "0"
-      ))
+    new LagomApplication(ctx) with ItemComponents with LocalServiceLocator with AhcWSComponents with TestTopicComponents {
+      override def additionalConfiguration: AdditionalConfiguration =
+        super.additionalConfiguration ++ Configuration.from(Map(
+          "cassandra-query-journal.eventual-consistency-delay" -> "0"
+        ))
     }
   }
 
@@ -63,7 +65,7 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
             items <- itemService.getItemsForUser(tom, api.ItemStatus.Created, None, None).invoke()
           } yield {
             items.count should ===(1)
-            items.items should contain only ItemSummary(tomItem.safeId, tomItem.title, tomItem.currencyId,
+            items.items should contain only ItemSummary(createdTomItem.safeId, tomItem.title, tomItem.currencyId,
               tomItem.reservePrice, tomItem.status)
           }
         }
@@ -108,7 +110,7 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
         case recheck if checkUntil > System.currentTimeMillis() =>
           val timeout = Promise[T]()
           server.application.actorSystem.scheduler.scheduleOnce(checkEvery) {
-            timeout.completeWith(block)
+            timeout.completeWith(doCheck())
           }(server.executionContext)
           timeout.future
       }

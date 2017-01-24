@@ -102,7 +102,7 @@ case class Item(
   auctionStart: Option[Instant],
   auctionEnd: Option[Instant],
   auctionWinner: Option[UUID]
-) {
+) extends Jsonable {
   
   def start(startTime: Instant) = {
     assert(status == ItemStatus.Created)

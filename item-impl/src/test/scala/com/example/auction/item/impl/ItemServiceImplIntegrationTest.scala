@@ -4,7 +4,6 @@ import java.time.Duration
 import java.util.UUID
 
 import akka.stream.scaladsl.Sink
-import akka.testkit.TestKit
 import com.example.auction.item.api
 import com.example.auction.item.api.{ItemService, ItemSummary}
 import com.example.auction.security.ClientSecurity._

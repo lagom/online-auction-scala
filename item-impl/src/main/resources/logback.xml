@@ -23,6 +23,7 @@
     <logger name="com.datastax.driver" level="ERROR" />
     <!-- Turn down Kafka noise -->
     <logger name="org.apache.kafka" level="WARN" />
+    <logger name="javax.management" level="WARN" />
 
     <root level="WARN">
         <appender-ref ref="ASYNCSTDOUT" />

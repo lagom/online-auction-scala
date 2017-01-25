@@ -1,6 +1,10 @@
 lazy val root = (project in file("."))
   .settings(name := "online-auction-scala")
-  .aggregate(itemApi, itemImpl, biddingApi, biddingImpl, userApi, userImpl, webGateway)
+  .aggregate(itemApi, itemImpl,
+    biddingApi, biddingImpl,
+    userApi, userImpl,
+    searchApi, searchImpl,
+    webGateway)
   .settings(commonSettings: _*)
 
 organization in ThisBuild := "com.example"
@@ -93,12 +97,13 @@ lazy val searchApi = (project in file("search-api"))
 
 lazy val searchImpl = (project in file("search-impl"))
   .settings(commonSettings: _*)
-  // .enablePlugins(LagomScala)
+  .enablePlugins(LagomScala)
   .dependsOn(searchApi, itemApi, biddingApi)
   .settings(
     version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
+      lagomScaladslKafkaClient,
       lagomScaladslTestKit,
       macwire,
       scalaTest
@@ -177,3 +182,10 @@ def commonSettings: Seq[Setting[_]] = Seq(
 )
 
 lagomCassandraCleanOnStart in ThisBuild := false
+
+// ------------------------------------------------------------------------------------------------
+
+// register 'elastic-search' as an unmanaged service on the service locator so that at 'runAll' our code
+// will resolve 'elastic-search' and use it. See also com.example.com.ElasticSearch
+lagomUnmanagedServices in ThisBuild += ("elastic-search" -> "http://127.0.0.1:9200")
+

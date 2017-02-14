@@ -48,7 +48,7 @@ class ItemEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with 
       outcome.state.value.status should ===(ItemStatus.Auction)
     }
 
-    "should only allow the creator to start an auction" in withDriver { driver =>
+    "only allow the creator to start an auction" in withDriver { driver =>
       driver.run(CreateItem(item))
       val outcome = driver.run(StartAuction(UUID.randomUUID))
       outcome.events shouldBe empty
@@ -56,19 +56,19 @@ class ItemEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with 
       outcome.replies.head shouldBe a [InvalidCommandException]
     }
 
-    "should ignore duplicate starte auction commands" in withDriver { driver =>
+    "ignore duplicate starte auction commands" in withDriver { driver =>
       driver.run(CreateItem(item), StartAuction(creatorId))
       driver.run(StartAuction(creatorId)).events shouldBe empty
     }
 
-    "should allow updating the price" in withDriver { driver =>
+    "allow updating the price" in withDriver { driver =>
       driver.run(CreateItem(item), StartAuction(creatorId))
       val outcome = driver.run(UpdatePrice(10))
       outcome.events should contain only PriceUpdated(10)
       outcome.state.value.price.value should ===(10)
     }
 
-    "should allow finishing an auction" in withDriver { driver =>
+    "allow finishing an auction" in withDriver { driver =>
       driver.run(CreateItem(item), StartAuction(creatorId))
       val winner = UUID.randomUUID
       val outcome = driver.run(FinishAuction(Some(winner), Some(20)))
@@ -78,7 +78,7 @@ class ItemEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with 
       outcome.state.value.status should ===(ItemStatus.Completed)
     }
 
-    "should allow finishing an auction with no winner" in withDriver { driver =>
+    "allow finishing an auction with no winner" in withDriver { driver =>
       driver.run(CreateItem(item), StartAuction(creatorId))
       val outcome = driver.run(FinishAuction(None, None))
       outcome.events should contain only AuctionFinished(None, None)
@@ -87,13 +87,13 @@ class ItemEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll with 
       outcome.state.value.status should ===(ItemStatus.Completed)
     }
 
-    "should ignore a request to start a completed auction" in withDriver { driver =>
+    "ignore a request to start a completed auction" in withDriver { driver =>
       driver.run(CreateItem(item), StartAuction(creatorId), FinishAuction(None, None))
       val outcome = driver.run(StartAuction(creatorId))
       outcome.events shouldBe empty
     }
 
-    "should allow getting an auction" in withDriver { driver =>
+    "allow getting an auction" in withDriver { driver =>
       driver.run(CreateItem(item))
       val outcome1 = driver.run(GetItem)
       outcome1.replies should contain only Some(item)

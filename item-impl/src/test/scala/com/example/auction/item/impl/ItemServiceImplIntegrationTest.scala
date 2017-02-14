@@ -14,8 +14,9 @@ import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, Matchers}
 import play.api.Configuration
 import play.api.libs.ws.ahc.AhcWSComponents
 
-import scala.concurrent.{Future, Promise}
+import scala.collection.immutable.Seq
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 
 
 /**
@@ -76,11 +77,14 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
       for {
         createdItem <- createItem(creatorId, sampleItem(creatorId))
         _ <- startAuction(creatorId, createdItem)
-        event <- itemService.itemEvents.subscribe.atMostOnceSource
+        event: Seq[api.ItemEvent] <- itemService.itemEvents.subscribe.atMostOnceSource
           .dropWhile(_.itemId != createdItem.safeId)
-          .runWith(Sink.head)
+          .take(2)
+          .runWith(Sink.seq)
       } yield {
-        event shouldBe an [api.AuctionStarted]
+        event.size shouldBe 2
+        event.head shouldBe an[api.ItemUpdated]
+        event.drop(1).head shouldBe an[api.AuctionStarted]
       }
     }
   }
@@ -114,6 +118,7 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
           timeout.future
       }
     }
+
     doCheck()
   }
 }

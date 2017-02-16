@@ -47,4 +47,8 @@ class ItemApplicationLoader extends LagomApplicationLoader {
   override def load(context: LagomApplicationContext): LagomApplication = new ItemApplication(context) {
     override def serviceLocator: ServiceLocator = NoServiceLocator
   }
+  
+  override def describeServices = List(
+    readDescriptor[ItemService]
+  )
 }

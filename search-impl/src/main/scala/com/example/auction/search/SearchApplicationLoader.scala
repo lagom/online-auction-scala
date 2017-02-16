@@ -41,4 +41,8 @@ class SearchApplicationLoader extends LagomApplicationLoader {
 
   override def loadDevMode(context: LagomApplicationContext) =
     new SearchApplication(context) with LagomDevModeComponents
+  
+  override def describeServices = List(
+    readDescriptor[SearchService]
+  )
 }

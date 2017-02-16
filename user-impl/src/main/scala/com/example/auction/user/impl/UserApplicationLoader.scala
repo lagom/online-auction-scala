@@ -28,4 +28,8 @@ class UserApplicationLoader extends LagomApplicationLoader {
 
   override def loadDevMode(context: LagomApplicationContext) =
     new UserApplication(context) with LagomDevModeComponents
+  
+  override def describeServices = List(
+    readDescriptor[UserService]
+  )
 }

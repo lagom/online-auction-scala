@@ -118,7 +118,8 @@ lazy val transactionApi = (project in file("transaction-api"))
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
-    )
+    ),
+    EclipseKeys.skipProject := true
   )
   .dependsOn(security)
 
@@ -133,7 +134,8 @@ lazy val transactionImpl = (project in file("transaction-impl"))
       lagomScaladslTestKit,
       macwire,
       scalaTest
-    )
+    ),
+    EclipseKeys.skipProject := true
   )
 
 lazy val userApi = (project in file("user-api"))

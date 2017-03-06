@@ -1,6 +1,6 @@
 package com.example.auction.item.impl
 
-import java.time.{Duration, Instant}
+import java.time.{ Duration, Instant }
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -8,9 +8,10 @@ import akka.persistence.query.Sequence
 import com.datastax.driver.core.utils.UUIDs
 import com.example.auction.item.api
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
+import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.lightbend.lagom.scaladsl.server.LagomApplication
 import com.lightbend.lagom.scaladsl.testkit.ServiceTest
-import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, Matchers}
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, Matchers }
 import play.api.libs.ws.ahc.AhcWSComponents
 
 import scala.concurrent.Future
@@ -18,7 +19,7 @@ import scala.concurrent.Future
 class ItemEventProcessorSpec extends AsyncWordSpec with BeforeAndAfterAll with Matchers {
 
   private val server = ServiceTest.startServer(ServiceTest.defaultSetup.withCassandra(true)) { ctx =>
-    new LagomApplication(ctx) with ItemComponents with AhcWSComponents {
+    new LagomApplication(ctx) with ItemComponents with AhcWSComponents with LagomKafkaComponents {
       override def serviceLocator = NoServiceLocator
       override lazy val readSide: ReadSideTestDriver = new ReadSideTestDriver
     }

@@ -1,16 +1,16 @@
 import com.example.auction.bidding.api.BiddingService
 import com.example.auction.item.api.ItemService
 import com.example.auction.user.api.UserService
-import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
-import com.lightbend.lagom.scaladsl.api.{ServiceAcl, ServiceInfo}
+import com.lightbend.lagom.scaladsl.api.{ ServiceAcl, ServiceInfo }
 import com.lightbend.lagom.scaladsl.client.LagomServiceClientComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
-import play.api.{ApplicationLoader, BuiltInComponentsFromContext, Mode}
+import com.softwaremill.macwire._
+import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
+import controllers.{ Assets, ItemController, Main, ProfileController }
 import play.api.ApplicationLoader.Context
 import play.api.i18n.I18nComponents
 import play.api.libs.ws.ahc.AhcWSComponents
-import com.softwaremill.macwire._
-import controllers.{Assets, ItemController, Main, ProfileController}
+import play.api.{ ApplicationLoader, BuiltInComponentsFromContext, Mode }
 import router.Routes
 
 import scala.collection.immutable
@@ -46,10 +46,8 @@ abstract class WebGateway(context: Context) extends BuiltInComponentsFromContext
 class WebGatewayLoader extends ApplicationLoader {
   override def load(context: Context) = context.environment.mode match {
     case Mode.Dev =>
-      new WebGateway(context) with LagomDevModeComponents {}.application
+      (new WebGateway(context) with LagomDevModeComponents).application
     case _ =>
-      new WebGateway(context) {
-        override def serviceLocator = NoServiceLocator
-      }.application
+      (new WebGateway(context) with ConductRApplicationComponents).application
   }
 }

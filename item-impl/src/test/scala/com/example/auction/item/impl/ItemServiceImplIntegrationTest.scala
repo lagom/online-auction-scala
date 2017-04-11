@@ -5,18 +5,18 @@ import java.util.UUID
 
 import akka.stream.scaladsl.Sink
 import com.example.auction.item.api
-import com.example.auction.item.api.{ItemService, ItemSummary}
+import com.example.auction.item.api.{ ItemService, ItemSummary }
 import com.example.auction.security.ClientSecurity._
 import com.lightbend.lagom.scaladsl.api.AdditionalConfiguration
-import com.lightbend.lagom.scaladsl.server.{LagomApplication, LocalServiceLocator}
-import com.lightbend.lagom.scaladsl.testkit.{ServiceTest, TestTopicComponents}
-import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, Matchers}
+import com.lightbend.lagom.scaladsl.server.{ LagomApplication, LocalServiceLocator }
+import com.lightbend.lagom.scaladsl.testkit.{ ServiceTest, TestTopicComponents }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, Matchers }
 import play.api.Configuration
 import play.api.libs.ws.ahc.AhcWSComponents
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ Future, Promise }
 
 
 /**
@@ -72,19 +72,19 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
       }).flatMap(identity)
     }
 
-    "should emit auction started event" in {
+    "emit auction started event" in {
       val creatorId = UUID.randomUUID
       for {
         createdItem <- createItem(creatorId, sampleItem(creatorId))
         _ <- startAuction(creatorId, createdItem)
-        event: Seq[api.ItemEvent] <- itemService.itemEvents.subscribe.atMostOnceSource
-          .dropWhile(_.itemId != createdItem.safeId)
+        events: Seq[api.ItemEvent] <- itemService.itemEvents.subscribe.atMostOnceSource
+          .filter(_.itemId == createdItem.safeId)
           .take(2)
           .runWith(Sink.seq)
       } yield {
-        event.size shouldBe 2
-        event.head shouldBe an[api.ItemUpdated]
-        event.drop(1).head shouldBe an[api.AuctionStarted]
+        events.size shouldBe 2
+        events.head shouldBe an[api.ItemUpdated]
+        events.drop(1).head shouldBe an[api.AuctionStarted]
       }
     }
   }

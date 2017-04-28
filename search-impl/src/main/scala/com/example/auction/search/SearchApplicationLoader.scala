@@ -28,10 +28,7 @@ abstract class SearchApplication(context: LagomApplicationContext) extends Lagom
 
   lazy val indexedStore:IndexedStore[SearchResult] = wire[ElasticSearchIndexedStore]
 
-  override lazy val lagomServer = LagomServer.forServices(
-    bindService[SearchService].to(wire[SearchServiceImpl]),
-    metricsServiceBinding
-  )
+  override lazy val lagomServer = serverFor[SearchService](wire[SearchServiceImpl])
 
   wire[BrokerEventConsumer]
 

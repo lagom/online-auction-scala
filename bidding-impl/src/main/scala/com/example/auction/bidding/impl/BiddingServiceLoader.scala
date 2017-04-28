@@ -6,6 +6,7 @@ import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server._
+import com.lightbend.lagom.internal.client.CircuitBreakerMetricsProviderImpl
 import com.softwaremill.macwire._
 import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
 import play.api.libs.ws.ahc.AhcWSComponents
@@ -16,9 +17,7 @@ abstract class BiddingApplication(context: LagomApplicationContext) extends Lago
   with LagomKafkaComponents {
 
   lazy val itemService = serviceClient.implement[ItemService]
-  override lazy val lagomServer = LagomServer.forServices(
-    bindService[BiddingService].to(wire[BiddingServiceImpl])
-  )
+  override lazy val lagomServer = serverFor[BiddingService](wire[BiddingServiceImpl])
   override lazy val jsonSerializerRegistry = BiddingSerializerRegistry
 
   // Initialise everything
@@ -30,7 +29,10 @@ abstract class BiddingApplication(context: LagomApplicationContext) extends Lago
 
 class BiddingApplicationLoader extends LagomApplicationLoader {
   override def load(context: LagomApplicationContext) =
-    new BiddingApplication(context) with ConductRApplicationComponents
+    new BiddingApplication(context) with ConductRApplicationComponents {
+
+    override lazy val circuitBreakerMetricsProvider = new CircuitBreakerMetricsProviderImpl(actorSystem)
+  }
 
   override def loadDevMode(context: LagomApplicationContext) =
     new BiddingApplication(context) with LagomDevModeComponents

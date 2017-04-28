@@ -6,6 +6,7 @@ import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server._
+import com.lightbend.lagom.internal.client.CircuitBreakerMetricsProviderImpl
 import com.softwaremill.macwire._
 import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
 import play.api.Environment
@@ -19,9 +20,7 @@ trait ItemComponents extends LagomServerComponents
   implicit def executionContext: ExecutionContext
   def environment: Environment
 
-  override lazy val lagomServer = LagomServer.forServices(
-    bindService[ItemService].to(wire[ItemServiceImpl])
-  )
+  override lazy val lagomServer = serverFor[ItemService](wire[ItemServiceImpl])
   lazy val itemRepository = wire[ItemRepository]
   lazy val jsonSerializerRegistry = ItemSerializerRegistry
 
@@ -44,7 +43,10 @@ class ItemApplicationLoader extends LagomApplicationLoader {
     new ItemApplication(context) with LagomDevModeComponents
 
   override def load(context: LagomApplicationContext): LagomApplication =
-    new ItemApplication(context) with ConductRApplicationComponents
+    new ItemApplication(context) with ConductRApplicationComponents {
+
+    override lazy val circuitBreakerMetricsProvider = new CircuitBreakerMetricsProviderImpl(actorSystem)
+  }
   
   override def describeServices = List(
     readDescriptor[ItemService]

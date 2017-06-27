@@ -2,6 +2,8 @@
 
 Handles the transaction of negotiating delivery info and making payment of an item that has completed an auction.
 
+ATTENTION: _This service is Work In Progress._
+
 ## Queries handled
 
 * **getTransaction** - Gets a transaction by an items ID.

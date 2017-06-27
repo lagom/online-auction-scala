@@ -4,7 +4,6 @@ import com.example.auction.user.api.UserService
 import com.lightbend.lagom.scaladsl.api.{ ServiceAcl, ServiceInfo }
 import com.lightbend.lagom.scaladsl.client.LagomServiceClientComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
-import com.lightbend.lagom.internal.client.CircuitBreakerMetricsProviderImpl
 import com.softwaremill.macwire._
 import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
 import controllers.{ Assets, ItemController, Main, ProfileController }
@@ -49,8 +48,6 @@ class WebGatewayLoader extends ApplicationLoader {
     case Mode.Dev =>
       (new WebGateway(context) with LagomDevModeComponents).application
     case _ =>
-      (new WebGateway(context) with ConductRApplicationComponents {
-        override lazy val circuitBreakerMetricsProvider = new CircuitBreakerMetricsProviderImpl(actorSystem)
-      }).application
+      (new WebGateway(context) with ConductRApplicationComponents).application
   }
 }

@@ -6,12 +6,10 @@ import com.example.auction.search.api.SearchService
 import com.example.auction.search.impl.{ BrokerEventConsumer, SearchServiceImpl }
 import com.example.elasticsearch.response.SearchResult
 import com.example.elasticsearch.{ ElasticSearchIndexedStore, Elasticsearch }
-import com.lightbend.lagom.internal.client.CircuitBreakerMetricsProviderImpl
-import com.lightbend.lagom.internal.spi.CircuitBreakerMetricsProvider
 import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaClientComponents
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.server.status.MetricsServiceComponents
-import com.lightbend.lagom.scaladsl.server.{ LagomApplication, LagomApplicationContext, LagomApplicationLoader, LagomServer }
+import com.lightbend.lagom.scaladsl.server.{ LagomApplication, LagomApplicationContext, LagomApplicationLoader }
 import com.softwaremill.macwire._
 import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
 import play.api.libs.ws.ahc.AhcWSComponents
@@ -36,10 +34,7 @@ abstract class SearchApplication(context: LagomApplicationContext) extends Lagom
 
 class SearchApplicationLoader extends LagomApplicationLoader {
   override def load(context: LagomApplicationContext) =
-    new SearchApplication(context) with ConductRApplicationComponents {
-      override lazy val circuitBreakerMetricsProvider: CircuitBreakerMetricsProvider =
-        new CircuitBreakerMetricsProviderImpl(actorSystem)
-    }
+    new SearchApplication(context) with ConductRApplicationComponents
 
   override def loadDevMode(context: LagomApplicationContext) =
     new SearchApplication(context) with LagomDevModeComponents

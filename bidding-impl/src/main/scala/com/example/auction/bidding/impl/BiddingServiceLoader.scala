@@ -33,7 +33,5 @@ class BiddingApplicationLoader extends LagomApplicationLoader {
   override def loadDevMode(context: LagomApplicationContext) =
     new BiddingApplication(context) with LagomDevModeComponents
 
-  override def describeServices = List(
-    readDescriptor[BiddingService]
-  )
+  override def describeService = Some(readDescriptor[BiddingService])
 }

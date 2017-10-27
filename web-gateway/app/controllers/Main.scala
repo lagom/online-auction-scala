@@ -20,6 +20,8 @@ class Main(messagesApi: MessagesApi, userService: UserService)(implicit ec: Exec
   def index = Action.async { implicit rh =>
     withUser(loadNav(_).map { implicit nav =>
       Ok(views.html.index())
+    }.recover{
+      case e => BadRequest("Oops")
     })
   }
 
@@ -37,9 +39,16 @@ class Main(messagesApi: MessagesApi, userService: UserService)(implicit ec: Exec
         })
       },
       createUserForm => {
-        userService.createUser.invoke(CreateUser(createUserForm.name)).map { user =>
+        userService.createUser.invoke(CreateUser(createUserForm.name))
+          .map { user =>
           Redirect(routes.ProfileController.myItems(ItemStatus.Completed.toString.toLowerCase(Locale.ENGLISH), None, None))
             .withSession("user" -> user.id.toString)
+        }
+        .recoverWith {
+          case e =>
+            withUser(loadNav(_).map { implicit nav =>
+              Ok(views.html.createUser(form.withGlobalError("Apologies, we are unable to create a new user at this time. Please try again later.")))
+            })
         }
       }
     )

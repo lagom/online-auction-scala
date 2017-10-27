@@ -29,7 +29,12 @@ abstract class AbstractController(messagesApi: MessagesApi, userService: UserSer
   }
 
   protected def loadNav(userId: Option[UUID])(implicit rh: RequestHeader): Future[Nav] = {
-    userService.getUsers.invoke().map { users =>
+    userService.getUsers.invoke()
+      //If the user service is unavailable for any reason, return an empty list of users
+      .recover {
+        case e => Seq.empty[User]
+      }
+      .map { users =>
       val user = userId.flatMap(uid => users.find(_.id == uid))
       Nav(messagesApi.preferred(rh), users, user)
     }

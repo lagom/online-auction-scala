@@ -3,7 +3,7 @@ package com.example.auction.utils
 import java.time.Duration
 import java.util.UUID
 
-import play.api.data.validation.ValidationError
+import play.api.libs.json.JsonValidationError
 import play.api.libs.json._
 
 import scala.util.Try
@@ -27,7 +27,7 @@ object JsonFormats {
 
   def singletonReads[O](singleton: O): Reads[O] = {
     (__ \ "value").read[String].collect(
-      ValidationError(s"Expected a JSON object with a single field with key 'value' and value '${singleton.getClass.getSimpleName}'")
+      JsonValidationError(s"Expected a JSON object with a single field with key 'value' and value '${singleton.getClass.getSimpleName}'")
     ) {
       case s if s == singleton.getClass.getSimpleName => singleton
     }
@@ -40,7 +40,7 @@ object JsonFormats {
   }
 
   implicit val uuidReads: Reads[UUID] = implicitly[Reads[String]]
-    .collect(ValidationError("Invalid UUID"))(Function.unlift { str =>
+    .collect(JsonValidationError("Invalid UUID"))(Function.unlift { str =>
       Try(UUID.fromString(str)).toOption
     })
   implicit val uuidWrites: Writes[UUID] = Writes { uuid =>
@@ -48,7 +48,7 @@ object JsonFormats {
   }
 
   implicit val durationReads: Reads[Duration] = implicitly[Reads[String]]
-      .collect(ValidationError("Invalid duration"))(Function.unlift { str =>
+      .collect(JsonValidationError("Invalid duration"))(Function.unlift { str =>
         Try(Duration.parse(str)).toOption
       })
   implicit val durationWrites: Writes[Duration] = Writes { duration =>

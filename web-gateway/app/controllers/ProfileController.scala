@@ -24,7 +24,7 @@ class ProfileController(messagesApi: MessagesApi, userService: UserService, item
       nav <- loadNav(userId)
       items <- itemService.getItemsForUser(userId, status, page, pageSize).invoke()
     } yield {
-      Ok(views.html.myItems(status, items)(nav))
+      Ok(views.html.myItems(status, items)(nav, rh))
     })
   }
 }

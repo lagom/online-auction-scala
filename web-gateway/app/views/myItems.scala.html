@@ -2,9 +2,10 @@
 @import com.example.auction.item.api.ItemSummary
 @import com.example.auction.utils.PaginatedSequence
 @import controllers.Currency
+@import helper._
 
 @import java.util.Locale
-@(status: ItemStatus.Status, paginatedItems: PaginatedSequence[ItemSummary])(implicit nav: Nav)
+@(status: ItemStatus.Status, paginatedItems: PaginatedSequence[ItemSummary])(implicit nav: Nav, request: RequestHeader)
 
 @for(user <- nav.user) {
     @main(user.name) {
@@ -48,7 +49,7 @@
                                 <td>@currency.format(item.reservePrice)</td>
                                 <td>
                                 @if(item.status == ItemStatus.Created) {
-                                    <form action="@routes.ItemController.startAuction(item.id)" method="POST">
+                                    <form action=@CSRF(routes.ItemController.startAuction(item.id)) method="POST">
                                         <input class="button success" type="submit" value="@Messages("startAuction")"/>
                                     </form>
                                 }

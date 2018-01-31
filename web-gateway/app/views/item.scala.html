@@ -5,9 +5,10 @@
 @import com.example.auction.bidding.api.BidResultStatus._
 @import java.util.UUID
 @import controllers.{Currency => Currencies}
+@import helper._
 
 @(item: Item, bidForm: Form[BidForm], biddingHistory: Seq[AnonymousBid], currentUser: UUID, currency: Currencies,
-        seller: User, winner: Option[User], currentMaximumBid: Option[Int], bidResult: Option[BidResult])(implicit nav: Nav)
+        seller: User, winner: Option[User], currentMaximumBid: Option[Int], bidResult: Option[BidResult])(implicit nav: Nav, request: RequestHeader)
 
 @renderBidResult(icon: String, callout: String, bidMessage: String, result: BidResult) = {
     
@@ -95,7 +96,7 @@
     </dl>
 
     @if(currentUser == item.creator && item.status == ItemStatus.Created) {
-        <form action="@routes.ItemController.startAuction(item.safeId)" method="POST">
+        <form action=@CSRF(routes.ItemController.startAuction(item.safeId)) method="POST">
             <input class="button success" type="submit" value="@Messages("startAuction")"/>
         </form>
     }
@@ -106,7 +107,7 @@
                 @Messages("currentWinningBidderMessage", currency.format(maxBid))
             </div>
         }
-        @foundationForm(bidForm, routes.ItemController.placeBid(item.safeId)) {
+        @foundationForm(bidForm, CSRF(routes.ItemController.placeBid(item.safeId))) {
             @helper.inputText(bidForm("bid"), 'type -> "number", 'step -> currency.formatDecimal(item.increment),
                 'min -> currency.formatDecimal(item.price.getOrElse(0) + item.increment))
             <input type="hidden" name="currency" value="@item.currencyId"/>

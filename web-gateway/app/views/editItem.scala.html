@@ -2,13 +2,13 @@
 @import java.time.temporal.ChronoUnit
 @import controllers.{Currency => Currencies}
 
-@(itemForm: Form[ItemForm])(implicit nav: Nav)
+@(itemForm: Form[ItemForm])(implicit nav: Nav, request: RequestHeader)
 
 @main(Messages("createItem")) {
 
     <h2>@Messages("createItem")</h2>
 
-    @foundationForm(itemForm, routes.ItemController.createItem()) {
+    @foundationForm(itemForm, CSRF(routes.ItemController.createItem())) {
         <div class="column row">
             @inputText(itemForm("title"))
         </div>

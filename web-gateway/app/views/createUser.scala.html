@@ -1,12 +1,12 @@
 @import helper._
 
-@(createUser: Form[CreateUserForm])(implicit nav: Nav)
+@(createUser: Form[CreateUserForm])(implicit nav: Nav, request: RequestHeader)
 
 @main(Messages("createUser")) {
 
     <h2>@Messages("createUser")</h2>
 
-    @foundationForm(createUser, routes.Main.createUser()) {
+    @foundationForm(createUser, CSRF(routes.Main.createUser())) {
         <div class="row">
             <div class="medium-6 columns">
                 @inputText(createUser("name"))

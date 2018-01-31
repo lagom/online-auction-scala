@@ -1,8 +1,9 @@
-@import views.html.helper.form
+@import helper._
 
-@(theForm: Form[_], action: play.api.mvc.Call, args: (Symbol,String)*)(body: => Html)(implicit messages: Messages)
+@(theForm: Form[_], action: play.api.mvc.Call, args: (Symbol,String)*)(body: => Html)(implicit messages: Messages, request: RequestHeader)
 
 @form(action, args: _*) {
+    @CSRF.formField
 
     <div class="row">
         <div class="medium-6 columns">

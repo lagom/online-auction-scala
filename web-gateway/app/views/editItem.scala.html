@@ -8,7 +8,7 @@
 
     <h2>@Messages("createItem")</h2>
 
-    @foundationForm(itemForm, CSRF(routes.ItemController.createItem())) {
+    @foundationForm(itemForm, routes.ItemController.createItem()) {
         <div class="column row">
             @inputText(itemForm("title"))
         </div>

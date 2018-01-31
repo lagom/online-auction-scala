@@ -1,24 +1,28 @@
 package controllers
 
-import java.time.{Duration, Instant}
 import java.time.temporal.ChronoUnit
+import java.time.{ Duration, Instant }
 import java.util.UUID
 
 import com.example.auction.bidding.api._
-import com.example.auction.item.api.{Item, ItemService, ItemStatus}
-import com.example.auction.user.api.UserService
+import com.example.auction.item.api.{ Item, ItemService, ItemStatus }
 import com.example.auction.security.ClientSecurity.authenticate
+import com.example.auction.user.api.UserService
 import org.slf4j.LoggerFactory
-import play.api.i18n.MessagesApi
-import play.api.data.{Form, FormError}
 import play.api.data.Forms._
+import play.api.data.{ Form, FormError }
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-class ItemController(messagesApi: MessagesApi, userService: UserService, itemService: ItemService,
-  bidService: BiddingService)(implicit ec: ExecutionContext) extends AbstractController(messagesApi, userService) {
+class ItemController(
+  userService: UserService,
+  itemService: ItemService,
+  bidService: BiddingService,
+  controllerComponents: ControllerComponents
+)(implicit ec: ExecutionContext)
+  extends AbstractAuctionController(userService, controllerComponents) {
 
   private val log = LoggerFactory.getLogger(classOf[ItemController])
 

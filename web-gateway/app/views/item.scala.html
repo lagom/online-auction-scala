@@ -96,7 +96,8 @@
     </dl>
 
     @if(currentUser == item.creator && item.status == ItemStatus.Created) {
-        <form action=@CSRF(routes.ItemController.startAuction(item.safeId)) method="POST">
+        <form action="@routes.ItemController.startAuction(item.safeId)" method="POST">
+            @CSRF.formField
             <input class="button success" type="submit" value="@Messages("startAuction")"/>
         </form>
     }
@@ -107,7 +108,7 @@
                 @Messages("currentWinningBidderMessage", currency.format(maxBid))
             </div>
         }
-        @foundationForm(bidForm, CSRF(routes.ItemController.placeBid(item.safeId))) {
+        @foundationForm(bidForm, routes.ItemController.placeBid(item.safeId)) {
             @helper.inputText(bidForm("bid"), 'type -> "number", 'step -> currency.formatDecimal(item.increment),
                 'min -> currency.formatDecimal(item.price.getOrElse(0) + item.increment))
             <input type="hidden" name="currency" value="@item.currencyId"/>

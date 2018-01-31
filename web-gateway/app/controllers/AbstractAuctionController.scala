@@ -1,20 +1,23 @@
 package controllers
 
-import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.{Date, UUID}
+import java.time.{ Duration, Instant, ZoneId, ZonedDateTime }
+import java.util.{ Date, UUID }
 
-import com.example.auction.user.api.{User, UserService}
+import com.example.auction.user.api.{ User, UserService }
 import org.ocpsoft.prettytime.PrettyTime
-import org.ocpsoft.prettytime.impl.{ResourcesTimeFormat, ResourcesTimeUnit}
+import org.ocpsoft.prettytime.impl.{ ResourcesTimeFormat, ResourcesTimeUnit }
 import org.ocpsoft.prettytime.units.JustNow
-import play.api.i18n.{Messages, MessagesApi}
-import play.api.mvc.{Controller, RequestHeader, Result}
+import play.api.i18n.Messages
+import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-abstract class AbstractController(messagesApi: MessagesApi, userService: UserService)(implicit ec: ExecutionContext) extends Controller {
+abstract class AbstractAuctionController(userService: UserService, controllerComponents: ControllerComponents)
+  (implicit ec: ExecutionContext)
+  extends AbstractController(controllerComponents) {
+
   protected def withUser[T](block: Option[UUID] => T)(implicit rh: RequestHeader): T = {
     block(rh.session.get("user").map(UUID.fromString))
   }

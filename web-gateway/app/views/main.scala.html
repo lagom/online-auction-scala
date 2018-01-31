@@ -1,7 +1,8 @@
 @import com.example.auction.item.api.ItemStatus
 @import java.util.Locale
+@import helper._
 
-@(title: String)(content: Html)(implicit nav: Nav)
+@(title: String)(content: Html)(implicit nav: Nav, request: RequestHeader)
 
 <html>
     <head>
@@ -26,7 +27,7 @@
                             @nav.user.map(_.name).getOrElse(Messages("logInAs"))</a>
                         <ul class="menu vertical">
                         @for(user <- nav.users) {
-                            <li><a href="#" data-user-id="@user.id" class="log-in-as">@user.name</a></li>
+                            <li><a href="#" data-user-id="@user.id" data-csrf-token="@CSRF.getToken.value" class="log-in-as">@user.name</a></li>
                         }
                         </ul>
                     </li>
@@ -41,8 +42,5 @@
         <script type="text/javascript" src="@routes.Assets.at("lib/jquery/jquery.min.js")"></script>
         <script type="text/javascript" src="@routes.Assets.at("lib/foundation/dist/foundation.min.js")"></script>
         <script type="text/javascript" src="@routes.Assets.at("main.js")"></script>
-        <script>
-                $(document).foundation();
-        </script>
     </body>
 </html>

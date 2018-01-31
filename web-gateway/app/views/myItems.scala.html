@@ -49,7 +49,8 @@
                                 <td>@currency.format(item.reservePrice)</td>
                                 <td>
                                 @if(item.status == ItemStatus.Created) {
-                                    <form action=@CSRF(routes.ItemController.startAuction(item.id)) method="POST">
+                                    <form action="@routes.ItemController.startAuction(item.id)" method="POST">
+                                        @CSRF.formField
                                         <input class="button success" type="submit" value="@Messages("startAuction")"/>
                                     </form>
                                 }

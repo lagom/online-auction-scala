@@ -2,15 +2,18 @@ package controllers
 
 import java.util.Locale
 
-import com.example.auction.item.api.{ItemService, ItemStatus}
+import com.example.auction.item.api.{ ItemService, ItemStatus }
 import com.example.auction.user.api.UserService
-import play.api.i18n.MessagesApi
-import play.api.mvc.Action
+import play.api.mvc.ControllerComponents
 
 import scala.concurrent.ExecutionContext
 
-class ProfileController(messagesApi: MessagesApi, userService: UserService, itemService: ItemService)
-  (implicit ec: ExecutionContext) extends AbstractController(messagesApi, userService) {
+class ProfileController(
+  userService: UserService,
+  itemService: ItemService,
+  controllerComponents: ControllerComponents
+)(implicit ec: ExecutionContext)
+  extends AbstractAuctionController(userService, controllerComponents) {
 
   def myItems(statusParam: String, page: Option[Int], pageSize: Option[Int]) = Action.async { implicit rh =>
     val status = statusParam.toLowerCase(Locale.ENGLISH) match {

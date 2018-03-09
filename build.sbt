@@ -12,6 +12,8 @@ organization in ThisBuild := "com.example"
 // the Scala version that will be used for cross-compiled libraries
 scalaVersion in ThisBuild := "2.12.4"
 
+version in ThisBuild := "1.0.0-SNAPSHOT"
+
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
@@ -19,7 +21,6 @@ val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 lazy val security = (project in file("security"))
   .settings(commonSettings: _*)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       lagomScaladslServer % Optional,
@@ -31,7 +32,6 @@ lazy val security = (project in file("security"))
 lazy val itemApi = (project in file("item-api"))
   .settings(commonSettings: _*)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -41,9 +41,8 @@ lazy val itemApi = (project in file("item-api"))
 
 lazy val itemImpl = (project in file("item-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
@@ -59,7 +58,6 @@ lazy val itemImpl = (project in file("item-impl"))
 lazy val biddingApi = (project in file("bidding-api"))
   .settings(commonSettings: _*)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -69,10 +67,9 @@ lazy val biddingApi = (project in file("bidding-api"))
 
 lazy val biddingImpl = (project in file("bidding-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
   .dependsOn(biddingApi, itemApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
@@ -87,7 +84,6 @@ lazy val biddingImpl = (project in file("bidding-impl"))
 lazy val searchApi = (project in file("search-api"))
   .settings(commonSettings: _*)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -97,10 +93,9 @@ lazy val searchApi = (project in file("search-api"))
 
 lazy val searchImpl = (project in file("search-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
   .dependsOn(searchApi, itemApi, biddingApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslKafkaClient,
@@ -114,7 +109,6 @@ lazy val transactionApi = (project in file("transaction-api"))
   .settings(commonSettings: _*)
   .dependsOn(itemApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -128,7 +122,6 @@ lazy val transactionImpl = (project in file("transaction-impl"))
   // .enablePlugins(LagomScala)
   .dependsOn(transactionApi, biddingApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
@@ -141,7 +134,6 @@ lazy val transactionImpl = (project in file("transaction-impl"))
 lazy val userApi = (project in file("user-api"))
   .settings(commonSettings: _*)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -151,10 +143,9 @@ lazy val userApi = (project in file("user-api"))
 
 lazy val userImpl = (project in file("user-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
   .dependsOn(userApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       macwire,
@@ -164,10 +155,9 @@ lazy val userImpl = (project in file("user-impl"))
 
 lazy val webGateway = (project in file("web-gateway"))
   .settings(commonSettings: _*)
-  .enablePlugins(PlayScala && LagomPlay)
+  .enablePlugins(PlayScala && LagomPlay, SbtReactiveAppPlugin)
   .dependsOn(biddingApi, itemApi, userApi)
   .settings(
-    version := "1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
       lagomScaladslServer,
       macwire,
@@ -178,7 +168,8 @@ lazy val webGateway = (project in file("web-gateway"))
       "org.webjars" % "foundation" % "6.2.3",
       "org.webjars" % "foundation-icon-fonts" % "d596a3cfb3"
     ),
-    EclipseKeys.preTasks := Seq(compile in Compile)
+    EclipseKeys.preTasks := Seq(compile in Compile),
+    httpIngressPaths := Seq("/")
   )
 
 def commonSettings: Seq[Setting[_]] = Seq(

@@ -7,7 +7,7 @@ import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
 import com.lightbend.lagom.scaladsl.server._
 import com.softwaremill.macwire._
-import com.typesafe.conductr.bundlelib.lagom.scaladsl.ConductRApplicationComponents
+import com.lightbend.rp.servicediscovery.lagom.scaladsl.LagomServiceLocatorComponents
 import play.api.Environment
 import play.api.libs.ws.ahc.AhcWSComponents
 
@@ -42,7 +42,7 @@ class ItemApplicationLoader extends LagomApplicationLoader {
     new ItemApplication(context) with LagomDevModeComponents
 
   override def load(context: LagomApplicationContext): LagomApplication =
-    new ItemApplication(context) with ConductRApplicationComponents
+    new ItemApplication(context) with LagomServiceLocatorComponents
 
   override def describeService = Some(readDescriptor[ItemService])
 }

@@ -54,3 +54,10 @@ For a simple, gentler, introduction to Lagom, have a look at the [Hello World gi
 - Getting help
 
 If you have any troubles and need help, feel free to ask in the [Gitter channel](https://gitter.im/lagom/lagom)
+
+## Running: Kubernetes
+
+This project uses [Lightbend's Platform Tooling](https://developer.lightbend.com/docs/reactive-platform-tooling/latest/) to
+simplify deployment to [Kubernetes](https://kubernetes.io/).
+
+Refer to [KUBERNETES.md](KUBERNETES.md) for more information on this process.

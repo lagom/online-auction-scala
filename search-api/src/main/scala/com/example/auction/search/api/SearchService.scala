@@ -9,7 +9,7 @@ import com.lightbend.lagom.scaladsl.api.transport.Method
 trait SearchService extends Service {
   override def descriptor: Descriptor =
     named("search").withCalls(
-      restCall(Method.GET, "/api/search?pageNo&pageSize", search _)
+      restCall(Method.POST, "/api/search?pageNo&pageSize", search _)
     ).withAutoAcl(true)
 
   def search(pageNo: Int, pageSize: Int): ServiceCall[SearchRequest, SearchResponse]

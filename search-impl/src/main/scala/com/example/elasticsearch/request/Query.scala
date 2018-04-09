@@ -7,11 +7,14 @@ case class BooleanQuery(must_not: Filter, must: Seq[Filter])
 
 case class Query(bool: BooleanQuery)
 
-case class QueryRoot(pageNumber: Int,
-                     pageSize: Int,
+case class QueryRoot(from: Int,
+                     size: Int,
                      query: Query,
                      sort: Seq[SortField] = Seq(Sorters.auctionEndDescending(), Sorters.priceAscending())
-                    )
+                    ) {
+  val pageNumber: Int = from
+  val pageSize: Int = size
+}
 
 
 object BooleanQuery {

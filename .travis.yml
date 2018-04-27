@@ -4,7 +4,7 @@ sudo: required
 jdk:
   - oraclejdk8
 script:
-  - sbt +test
+  - sbt test
 cache:
   directories:
     - $HOME/.ivy2/cache

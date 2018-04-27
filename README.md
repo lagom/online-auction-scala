@@ -57,7 +57,7 @@ If you have any troubles and need help, feel free to ask in the [Gitter channel]
 
 ## Running: Kubernetes
 
-This project uses [Lightbend's Platform Tooling](https://developer.lightbend.com/docs/reactive-platform-tooling/latest/) to
+This project uses [Lightbend Orchestration for Kubernetes](https://developer.lightbend.com/docs/lightbend-orchestration-kubernetes/latest/) to
 simplify deployment to [Kubernetes](https://kubernetes.io/).
 
 Refer to [KUBERNETES.md](KUBERNETES.md) for more information on this process.

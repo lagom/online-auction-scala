@@ -1,6 +1,6 @@
 package com.example.auction.item.impl
 
-import java.time.{ Duration, Instant }
+import java.time.{Duration, Instant}
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -10,8 +10,8 @@ import com.example.auction.item.api
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
 import com.lightbend.lagom.scaladsl.server.LagomApplication
-import com.lightbend.lagom.scaladsl.testkit.ServiceTest
-import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, Matchers }
+import com.lightbend.lagom.scaladsl.testkit.{ReadSideTestDriver, ServiceTest}
+import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, Matchers}
 import play.api.libs.ws.ahc.AhcWSComponents
 
 import scala.concurrent.Future

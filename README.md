@@ -47,9 +47,9 @@ Check the docs for each service for details on the **commands** and **queries** 
 
 ## Good to know
 
-- Hello World Gitter8 seed
+- Hello World Giter8 seed
 
-For a simple, gentler, introduction to Lagom, have a look at the [Hello World gitter8 seed project](https://www.lagomframework.com/get-started-scala.html) in the docs.
+For a simple, gentler, introduction to Lagom, have a look at the [Hello World giter8 seed project](https://www.lagomframework.com/get-started-scala.html) in the docs.
 
 - Getting help
 

@@ -16,7 +16,10 @@ version in ThisBuild := "1.0.0-SNAPSHOT"
 
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
+val scalaTestPlusPlay = "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+val mockito = "org.mockito" % "mockito-core" % "2.22.0" % Test
+
 
 lazy val security = (project in file("security"))
   .settings(commonSettings: _*)
@@ -162,6 +165,8 @@ lazy val webGateway = (project in file("web-gateway"))
       lagomScaladslServer,
       macwire,
       scalaTest,
+      scalaTestPlusPlay,
+      mockito,
 
       "org.ocpsoft.prettytime" % "prettytime" % "3.2.7.Final",
 

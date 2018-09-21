@@ -28,3 +28,7 @@ form label.error span.error {
 table td .button {
     margin: 0;
 }
+
+.navigation {
+    text-align: center;
+}

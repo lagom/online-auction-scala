@@ -67,5 +67,5 @@ noItems.Cancelled=No cancelled auctions
 items.Cancelled=Cancelled auctions
 items.caption={0} ({1})
 
-pagination.prev=Previous
-pagination.next=Next
+pagination.loadMore=Load more
+pagination.reload=Reload

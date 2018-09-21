@@ -58,7 +58,7 @@ class ItemServiceImplIntegrationTest extends AsyncWordSpec with Matchers with Be
       } yield {
         awaitSuccess() {
           for {
-            items <- itemService.getItemsForUser(tom, api.ItemStatus.Created, None, None).invoke()
+            items <- itemService.getItemsForUser(tom, api.ItemStatus.Created, None).invoke()
           } yield {
             items.count should ===(1)
             items.items should contain only ItemSummary(createdTomItem.safeId, tomItem.title, tomItem.currencyId,

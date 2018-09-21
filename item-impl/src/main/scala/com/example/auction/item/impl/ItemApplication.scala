@@ -1,5 +1,6 @@
 package com.example.auction.item.impl
 
+import akka.stream.Materializer
 import com.example.auction.bidding.api.BiddingService
 import com.example.auction.item.api.ItemService
 import com.lightbend.lagom.scaladsl.broker.kafka.LagomKafkaComponents
@@ -18,6 +19,8 @@ trait ItemComponents extends LagomServerComponents
 
   implicit def executionContext: ExecutionContext
   def environment: Environment
+
+  implicit def materializer: Materializer
 
   override lazy val lagomServer = serverFor[ItemService](wire[ItemServiceImpl])
   lazy val itemRepository = wire[ItemRepository]

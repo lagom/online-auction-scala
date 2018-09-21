@@ -23,7 +23,7 @@
             <div class="top-bar-right">
                 <ul class="menu dropdown" data-dropdown-menu>
                     <li>
-                        <a href="@routes.ProfileController.myItems(ItemStatus.Created.toString.toLowerCase(Locale.ENGLISH), None, None)">
+                        <a href="@routes.ProfileController.myItems(ItemStatus.Created.toString.toLowerCase(Locale.ENGLISH), None)">
                             @nav.user.map(_.name).getOrElse(Messages("logInAs"))</a>
                         <ul class="menu vertical">
                         @for(user <- nav.users) {

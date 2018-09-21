@@ -15,7 +15,7 @@ class ProfileController(
 )(implicit ec: ExecutionContext)
   extends AbstractAuctionController(userService, controllerComponents) {
 
-  def myItems(statusParam: String, page: Option[Int], pageSize: Option[Int]) = Action.async { implicit rh =>
+  def myItems(statusParam: String, page: Option[String]) = Action.async { implicit rh =>
     val status = statusParam.toLowerCase(Locale.ENGLISH) match {
       case "created" => ItemStatus.Created
       case "auction" => ItemStatus.Auction
@@ -25,9 +25,9 @@ class ProfileController(
     }
     requireUser(userId => for {
       nav <- loadNav(userId)
-      items <- itemService.getItemsForUser(userId, status, page, pageSize).invoke()
+      pagingState <- itemService.getItemsForUser(userId, status, page).invoke()
     } yield {
-      Ok(views.html.myItems(status, items)(nav, rh))
+      Ok(views.html.myItems(status, pagingState)(nav, rh))
     })
   }
 }

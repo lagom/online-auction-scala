@@ -7,7 +7,7 @@
     <h1>Index</h1>
 
     @for(user <- nav.user) {
-        <a href="@routes.ProfileController.myItems(ItemStatus.Created.toString.toLowerCase(Locale.ENGLISH), None, None)">
+        <a href="@routes.ProfileController.myItems(ItemStatus.Created.toString.toLowerCase(Locale.ENGLISH), None)">
             @Messages("my.auctions")
         </a>
     }

@@ -95,27 +95,45 @@ class ItemEventProcessorSpec extends AsyncWordSpec with BeforeAndAfterAll with M
       }
     }
 
-    "paginate item retrieval" in {
+    "get next pages using PagingState serialized token" in {
       val creatorId = UUID.randomUUID
       for {
         _ <- Future.sequence(for (i <- 1 to 35) yield {
           val item = sampleItem(creatorId).copy(title = s"title$i")
           feed(item.id, ItemCreated(item))
         })
-        items <- itemRepository.getItemsForUser(creatorId, api.ItemStatus.Created, 2, 10)
-      } yield {
-        items.count should ===(35)
-        items.page should ===(2)
-        items.pageSize should ===(10)
-        items.items should have size 10
-        items.items(4).title should ===("title11")
-      }
 
+        ps1 <- itemRepository.getItemsForUser(creatorId, api.ItemStatus.Created, None, 10)
+        ps2 <- itemRepository.getItemsForUser(creatorId, api.ItemStatus.Created, Some(ps1.nextPage), 10)
+        ps3 <- itemRepository.getItemsForUser(creatorId, api.ItemStatus.Created, Some(ps2.nextPage), 10)
+        ps4 <- itemRepository.getItemsForUser(creatorId, api.ItemStatus.Created, Some(ps3.nextPage), 10)
+
+      } yield {
+        ps1.count should ===(35)
+        ps1.nextPage.nonEmpty should ===(true)
+        ps1.items should have size 10
+        ps1.items.head.title should ===("title35")
+
+        ps2.count should ===(35)
+        ps2.nextPage.nonEmpty should ===(true)
+        ps2.items should have size 10
+        ps2.items.head.title should ===("title25")
+
+        ps3.count should ===(35)
+        ps3.nextPage.nonEmpty should ===(true)
+        ps3.items should have size 10
+        ps3.items.head.title should ===("title15")
+
+        ps4.count should ===(35)
+        ps4.nextPage.isEmpty should ===(true)
+        ps4.items should have size 5
+        ps4.items.head.title should ===("title5")
+      }
     }
   }
 
   private def getItems(creatorId: UUID, itemStatus: api.ItemStatus.Status) = {
-    itemRepository.getItemsForUser(creatorId, itemStatus, 0, 10)
+    itemRepository.getItemsForUser(creatorId, itemStatus, None, 10)
   }
 
   private def feed(itemId: UUID, event: ItemEvent) = {

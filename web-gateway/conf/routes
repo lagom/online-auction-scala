@@ -7,7 +7,7 @@ POST        /user                       controllers.Main.createUser
 POST        /currentuser/:userId        controllers.Main.currentUser(userId: java.util.UUID)
 
 # User profile
-GET         /my/items/:status           controllers.ProfileController.myItems(status, page: Option[Int], pageSize: Option[Int])
+GET         /my/items/:status           controllers.ProfileController.myItems(status, page: Option[String])
 
 # Items
 GET         /createitem                 controllers.ItemController.createItemForm

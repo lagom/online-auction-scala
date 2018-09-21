@@ -1,55 +1,12 @@
-@import com.example.auction.utils.PaginatedSequence
+@import com.example.auction.utils
 @import play.mvc.Call
 
-@(pagination: PaginatedSequence[_])(route: (Int, Int) => Call)(implicit messages: Messages)
+@(pagination: utils.PagingState[_], nextPageRoute: Call, reloadRoute: Call)(implicit messages: Messages)
 
-@paginationItem(href: => Call, label: String, isLinked: Boolean, disabledClass: String, otherClasses: String = "") = {
-@defining(otherClasses + (if(!isLinked) " " + disabledClass else "")) { liClasses =>
-    <li class="@liClasses">
-    @if(isLinked) {
-        <a href="@href" aria-label="@label">@label</a>
+<div class="navigation">
+    @if(pagination.isLast) {
+        <a class="" href=@reloadRoute>@messages("pagination.reload")</a>
     } else {
-        @label
+        <a class="" href=@nextPageRoute>@messages("pagination.loadMore")</a>
     }
-    </li>
-}
-}
-
-@page(page: Int) = @{
-    route(page, pagination.pageSize)
-}
-@prevPage() = @{
-    page(pagination.page - 1)
-}
-@nextPage() = @{
-    page(pagination.page + 1)
-}
-
-@if(pagination.isPaged) {
-    <nav>
-        <ul class="pagination" aria-label="Pagination">
-            @paginationItem(
-                prevPage(),
-                Messages("pagination.prev"),
-                isLinked = !pagination.isFirst,
-                disabledClass = "disabled",
-                otherClasses = "pagination-previous"
-            )
-            @for(pageNumber <- 0 until pagination.pageCount) {
-                @paginationItem(
-                    page(pageNumber),
-                    (pageNumber + 1).toString,
-                    isLinked = pageNumber != pagination.page,
-                    disabledClass = "current"
-                )
-            }
-            @paginationItem(
-                nextPage(),
-                Messages("pagination.next"),
-                isLinked = !pagination.isLast,
-                disabledClass = "disabled",
-                otherClasses = "pagination-next"
-            )
-        </ul>
-    </nav>
-}
+</div>

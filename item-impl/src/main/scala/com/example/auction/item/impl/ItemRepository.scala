@@ -3,26 +3,28 @@ package com.example.auction.item.impl
 import java.util.UUID
 
 import akka.Done
+import akka.stream.Materializer
 import com.datastax.driver.core._
 import com.example.auction.item.api.ItemSummary
 import com.example.auction.item.api
-import com.example.auction.utils.PaginatedSequence
+import com.example.auction.utils
 import com.lightbend.lagom.scaladsl.persistence.ReadSideProcessor
 import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, CassandraSession}
+import akka.persistence.cassandra.ListenableFutureConverter
 
+import collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
-private[impl] class ItemRepository(session: CassandraSession)(implicit ec: ExecutionContext) {
+private[impl] class ItemRepository(session: CassandraSession)(implicit ec: ExecutionContext, mat: Materializer) {
 
-  def getItemsForUser(creatorId: UUID, status: api.ItemStatus.Status, page: Int, pageSize: Int): Future[PaginatedSequence[ItemSummary]] = {
-    val offset = page * pageSize
-    val limit = (page + 1) * pageSize
+  def getItemsForUser(creatorId: UUID, status: api.ItemStatus.Status, page: Option[String], fetchSize: Int): Future[utils.PagingState[ItemSummary]] = {
     for {
       count <- countItemsByCreatorInStatus(creatorId, status)
-      items <- if (offset > count) Future.successful(Nil)
-        else selectItemsByCreatorInStatus(creatorId, status, offset, limit)
+      itemsWithNextPage <- selectItemsByCreatorInStatusWithPaging(creatorId, status, page, fetchSize)
     } yield {
-      PaginatedSequence(items, page, pageSize, count)
+      val items = itemsWithNextPage._1
+      val nextPage = itemsWithNextPage._2.getOrElse("")
+      utils.PagingState(items, nextPage, count)
     }
   }
 
@@ -48,6 +50,42 @@ private[impl] class ItemRepository(session: CassandraSession)(implicit ec: Execu
       rows.drop(offset)
        .map(convertItemSummary)
     }
+  }
+
+  /**
+    * Motivation: https://discuss.lightbend.com/t/how-to-specify-pagination-for-select-query-read-side/870
+    */
+  private def selectItemsByCreatorInStatusWithPaging(creatorId: UUID,
+                                                     status: api.ItemStatus.Status,
+                                                     page: Option[String],
+                                                     fetchSize: Int): Future[(Seq[ItemSummary], Option[String])] = {
+    val statement = new SimpleStatement(
+      """
+          SELECT * FROM itemSummaryByCreatorAndStatus
+          WHERE creatorId = ? AND status = ?
+          ORDER BY status ASC, itemId DESC
+          """, creatorId, status.toString)
+
+    statement.setFetchSize(fetchSize)
+
+    session.underlying().flatMap(underlyingSession => {
+
+      page.map(pagingStateStr => statement.setPagingState(PagingState.fromString(pagingStateStr)))
+
+      underlyingSession.executeAsync(statement).asScala map (resultSet => {
+        val newPagingState = resultSet.getExecutionInfo.getPagingState
+
+        /**
+          * @note Check against null due to Java code in `getPagingState` function.
+          * @note The `getPagingState` function can return null if there is no next page for this reason nextPage is an
+          * Option[String].
+          */
+        val nextPage: Option[String] = if (newPagingState != null) Some(newPagingState.toString) else None
+
+        val iterator = resultSet.iterator().asScala
+        iterator.take(fetchSize).map(convertItemSummary).toSeq -> nextPage
+      })
+    })
   }
 
   private def convertItemSummary(item: Row): ItemSummary = {

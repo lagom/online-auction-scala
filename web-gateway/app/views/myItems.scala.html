@@ -1,11 +1,11 @@
 @import com.example.auction.item.api.ItemStatus
 @import com.example.auction.item.api.ItemSummary
-@import com.example.auction.utils.PaginatedSequence
+@import com.example.auction.utils
 @import controllers.Currency
 @import helper._
 
 @import java.util.Locale
-@(status: ItemStatus.Status, paginatedItems: PaginatedSequence[ItemSummary])(implicit nav: Nav, request: RequestHeader)
+@(status: ItemStatus.Status, pagingState: utils.PagingState[ItemSummary])(implicit nav: Nav, request: RequestHeader)
 
 @for(user <- nav.user) {
     @main(user.name) {
@@ -15,17 +15,17 @@
             <ul class="menu vertical large-3 columns">
             @for(menuStatus <- ItemStatus.values) {
                 <li class="@if(menuStatus == status) {active}">
-                    <a href="@routes.ProfileController.myItems(menuStatus.toString.toLowerCase(Locale.ENGLISH), None, None)">@Messages("items." + menuStatus)</a>
+                    <a href="@routes.ProfileController.myItems(menuStatus.toString.toLowerCase(Locale.ENGLISH), None)">@Messages("items." + menuStatus)</a>
                 </li>
             }
             </ul>
 
             <div class="large-9 columns">
-            @if(paginatedItems.isEmpty) {
+            @if(pagingState.isEmpty) {
                 <em>@Messages("noItems." + status)</em>
             } else {
                 <table>
-                    <caption>@Messages("items.caption", Messages("items." + status), paginatedItems.count)</caption>
+                    <caption>@Messages("items.caption", Messages("items." + status), pagingState.count)</caption>
 
                     <thead>
                         <tr>
@@ -38,7 +38,7 @@
                     </thead>
 
                     <tbody>
-                    @for(item <- paginatedItems.items) {
+                    @for(item <- pagingState.items) {
                         @defining(Currency.valueOf(item.currencyId)) { currency =>
                             <tr>
                                 <td>
@@ -61,7 +61,11 @@
                     </tbody>
                 </table>
 
-                @paginate(paginatedItems)((pageNumber, pageSize) => routes.ProfileController.myItems(status.toString.toLowerCase(Locale.ENGLISH), Some(pageNumber), Some(pageSize)))
+                @paginate(
+                    pagingState,
+                    routes.ProfileController.myItems(status.toString.toLowerCase(Locale.ENGLISH), Some(pagingState.nextPage)),
+                    routes.ProfileController.myItems(status.toString.toLowerCase(Locale.ENGLISH), None)
+                )
             }
             </div>
         </div>

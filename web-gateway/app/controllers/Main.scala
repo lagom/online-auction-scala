@@ -42,7 +42,7 @@ class Main(userService: UserService, controllerComponents: ControllerComponents)
       createUserForm => {
         userService.createUser.invoke(CreateUser(createUserForm.name))
           .map { user =>
-          Redirect(routes.ProfileController.myItems(ItemStatus.Completed.toString.toLowerCase(Locale.ENGLISH), None, None))
+          Redirect(routes.ProfileController.myItems(ItemStatus.Completed.toString.toLowerCase(Locale.ENGLISH), None))
             .withSession("user" -> user.id.toString)
         }
         .recoverWith {

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.{Done, NotUsed}
 import com.example.auction.security.SecurityHeaderFilter
-import com.example.auction.utils.PaginatedSequence
+import com.example.auction.utils
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Service, ServiceCall}
@@ -38,11 +38,10 @@ trait ItemService extends Service {
     *
     * @param id       The ID of the user.
     * @param status   The status of items to return.
-    * @param pageNo   The page number, starting from zero.
-    * @param pageSize The number of items to return per page.
+    * @param page     The next page represented as string.
     * @return The sequence of items.
     */
-  def getItemsForUser(id: UUID, status: ItemStatus.Status, pageNo: Option[Int], pageSize: Option[Int]): ServiceCall[NotUsed, PaginatedSequence[ItemSummary]]
+  def getItemsForUser(id: UUID, status: ItemStatus.Status, page: Option[String]): ServiceCall[NotUsed, utils.PagingState[ItemSummary]]
 
   /**
     * The item events stream.
@@ -56,7 +55,7 @@ trait ItemService extends Service {
       pathCall("/api/item", createItem),
       restCall(Method.POST, "/api/item/:id/start", startAuction _),
       pathCall("/api/item/:id", getItem _),
-      pathCall("/api/item?userId&status&pageNo&pageSize", getItemsForUser _)
+      pathCall("/api/item?userId&status&page", getItemsForUser _)
     ).withTopics(
       topic("item-ItemEvent", this.itemEvents)
     ).withHeaderFilter(SecurityHeaderFilter.Composed)

@@ -13,7 +13,7 @@ import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraReadSide, Ca
 import akka.persistence.cassandra.ListenableFutureConverter
 
 import collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 private[impl] class ItemRepository(session: CassandraSession)(implicit ec: ExecutionContext, mat: Materializer) {
 
@@ -29,10 +29,15 @@ private[impl] class ItemRepository(session: CassandraSession)(implicit ec: Execu
   }
 
   private def countItemsByCreatorInStatus(creatorId: UUID, status: api.ItemStatus.Status) = {
-    session.selectOne("""
-      SELECT COUNT(*) FROM itemSummaryByCreatorAndStatus
-      WHERE creatorId = ? AND status = ?
-      ORDER BY status ASC, itemId DESC
+    session.selectOne(s"""
+      SELECT
+        COUNT(*)
+      FROM
+        ${ItemRepository.itemSummaryByCreatorAndStatusMV}
+      WHERE
+        ${ItemRepository.creatorId} = ? AND ${ItemRepository.status} = ?
+      ORDER BY
+        ${ItemRepository.status} ASC, ${ItemRepository.itemId} DESC
     """, // ORDER BY status is required due to https://issues.apache.org/jira/browse/CASSANDRA-10271
       creatorId, status.toString).map {
       case Some(row) => row.getLong("count").toInt
@@ -41,10 +46,15 @@ private[impl] class ItemRepository(session: CassandraSession)(implicit ec: Execu
   }
 
   private def selectItemsByCreatorInStatus(creatorId: UUID, status: api.ItemStatus.Status, offset: Int, limit: Int) = {
-    session.selectAll("""
-      SELECT * FROM itemSummaryByCreatorAndStatus
-      WHERE creatorId = ? AND status = ?
-      ORDER BY status ASC, itemId DESC
+    session.selectAll(s"""
+      SELECT
+        *
+      FROM
+        ${ItemRepository.itemSummaryByCreatorAndStatusMV}
+      WHERE
+        ${ItemRepository.creatorId} = ? AND ${ItemRepository.status} = ?
+      ORDER BY
+        ${ItemRepository.status} ASC, ${ItemRepository.itemId} DESC
       LIMIT ?
     """, creatorId, status.toString, Integer.valueOf(limit)).map { rows =>
       rows.drop(offset)
@@ -59,12 +69,16 @@ private[impl] class ItemRepository(session: CassandraSession)(implicit ec: Execu
                                                      status: api.ItemStatus.Status,
                                                      page: Option[String],
                                                      fetchSize: Int): Future[(Seq[ItemSummary], Option[String])] = {
-    val statement = new SimpleStatement(
-      """
-          SELECT * FROM itemSummaryByCreatorAndStatus
-          WHERE creatorId = ? AND status = ?
-          ORDER BY status ASC, itemId DESC
-          """, creatorId, status.toString)
+    val statement = new SimpleStatement(s"""
+      SELECT
+        *
+      FROM
+        ${ItemRepository.itemSummaryByCreatorAndStatusMV}
+      WHERE
+        ${ItemRepository.creatorId} = ? AND ${ItemRepository.status} = ?
+      ORDER BY
+        ${ItemRepository.status} ASC, ${ItemRepository.itemId} DESC
+      """, creatorId, status.toString)
 
     statement.setFetchSize(fetchSize)
 
@@ -90,121 +104,173 @@ private[impl] class ItemRepository(session: CassandraSession)(implicit ec: Execu
 
   private def convertItemSummary(item: Row): ItemSummary = {
     ItemSummary(
-      item.getUUID("itemId"),
-      item.getString("title"),
-      item.getString("currencyId"),
-      item.getInt("reservePrice"),
-      api.ItemStatus.withName(item.getString("status"))
+      item.getUUID(ItemRepository.itemId),
+      item.getString(ItemRepository.title),
+      item.getString(ItemRepository.currencyId),
+      item.getInt(ItemRepository.reservePrice),
+      api.ItemStatus.withName(item.getString(ItemRepository.status))
     )
   }
 }
 
 private[impl] class ItemEventProcessor(session: CassandraSession, readSide: CassandraReadSide)(implicit ec: ExecutionContext)
-  extends ReadSideProcessor[ItemEvent] {
-  private var insertItemCreatorStatement: PreparedStatement = null
-  private var insertItemSummaryByCreatorStatement: PreparedStatement = null
-  private var updateItemSummaryStatusStatement: PreparedStatement = null
+    extends ReadSideProcessor[ItemEvent] {
+
+  private val insertItemCreatorPromise = Promise[PreparedStatement]
+  private def insertItemCreator: Future[PreparedStatement] = insertItemCreatorPromise.future
+
+  private val insertItemSummaryByCreatorPromise = Promise[PreparedStatement]
+  private def insertItemSummaryByCreator: Future[PreparedStatement] = insertItemSummaryByCreatorPromise.future
+
+  private val updateItemSummaryStatusPromise = Promise[PreparedStatement]
+  private def updateItemSummaryStatus: Future[PreparedStatement] = updateItemSummaryStatusPromise.future
 
   def buildHandler = {
-    readSide.builder[ItemEvent]("itemEventOffset")
-      .setGlobalPrepare(createTables)
-      .setPrepare(_ => prepareStatements())
-      .setEventHandler[ItemCreated](e => insertItem(e.event.item))
-      .setEventHandler[AuctionStarted](e => updateItemSummaryStatus(e.entityId, api.ItemStatus.Auction))
-      .setEventHandler[AuctionFinished](e => updateItemSummaryStatus(e.entityId, api.ItemStatus.Completed))
-      .build
+    readSide.builder[ItemEvent](ItemRepository.itemEventOffset)
+        .setGlobalPrepare(createTables)
+        .setPrepare(_ => prepareStatements())
+        .setEventHandler[ItemCreated](e => insertItem(e.event.item))
+        .setEventHandler[AuctionStarted](e => doUpdateItemSummaryStatus(e.entityId, api.ItemStatus.Auction))
+        .setEventHandler[AuctionFinished](e => doUpdateItemSummaryStatus(e.entityId, api.ItemStatus.Completed))
+        .build
   }
 
   def aggregateTags = ItemEvent.Tag.allTags
 
   private def createTables() = {
     for {
-      _ <- session.executeCreateTable("""
-        CREATE TABLE IF NOT EXISTS itemCreator (
-          itemId timeuuid PRIMARY KEY,
-          creatorId UUID
+      _ <- session.executeCreateTable(s"""
+        CREATE TABLE IF NOT EXISTS ${ItemRepository.itemCreatorTable} (
+          ${ItemRepository.itemId} timeuuid PRIMARY KEY,
+          ${ItemRepository.creatorId} UUID
         )
       """)
-      _ <- session.executeCreateTable("""
-        CREATE TABLE IF NOT EXISTS itemSummaryByCreator (
-          creatorId UUID,
-          itemId timeuuid,
-          title text,
-          currencyId text,
-          reservePrice int,
-          status text,
-          PRIMARY KEY (creatorId, itemId)
-        ) WITH CLUSTERING ORDER BY (itemId DESC)
+      _ <- session.executeCreateTable(s"""
+        CREATE TABLE IF NOT EXISTS ${ItemRepository.itemSummaryByCreatorTable} (
+          ${ItemRepository.creatorId} UUID,
+          ${ItemRepository.itemId} timeuuid,
+          ${ItemRepository.title} text,
+          ${ItemRepository.currencyId} text,
+          ${ItemRepository.reservePrice} int,
+          ${ItemRepository.status} text,
+          PRIMARY KEY (${ItemRepository.creatorId}, ${ItemRepository.itemId})
+        ) WITH CLUSTERING ORDER BY (${ItemRepository.itemId} DESC)
       """)
-      _ <- session.executeCreateTable("""
-        CREATE MATERIALIZED VIEW IF NOT EXISTS itemSummaryByCreatorAndStatus AS
-          SELECT * FROM itemSummaryByCreator
-          WHERE status IS NOT NULL AND itemId IS NOT NULL
-          PRIMARY KEY (creatorId, status, itemId)
-          WITH CLUSTERING ORDER BY (status ASC, itemId DESC)
+      _ <- session.executeCreateTable(s"""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS ${ItemRepository.itemSummaryByCreatorAndStatusMV} AS
+          SELECT * FROM ${ItemRepository.itemSummaryByCreatorTable}
+          WHERE ${ItemRepository.status} IS NOT NULL AND ${ItemRepository.itemId} IS NOT NULL
+          PRIMARY KEY (${ItemRepository.creatorId}, ${ItemRepository.status}, ${ItemRepository.itemId})
+          WITH CLUSTERING ORDER BY (${ItemRepository.status} ASC, ${ItemRepository.itemId} DESC)
       """)
     } yield Done
   }
 
   private def prepareStatements() = {
-    for {
-      insertItemCreator <- session.prepare("""
-        INSERT INTO itemCreator(itemId, creatorId) VALUES (?, ?)
+
+    val insertItemCreatorFuture = session.prepare(s"""
+        INSERT INTO ${ItemRepository.itemCreatorTable} (
+          ${ItemRepository.itemId},
+          ${ItemRepository.creatorId}
+        ) VALUES (?, ?)
       """)
-      insertItemSummary <- session.prepare("""
-        INSERT INTO itemSummaryByCreator(
-          creatorId,
-          itemId,
-          title,
-          currencyId,
-          reservePrice,
-          status
+    insertItemCreatorPromise.completeWith(insertItemCreatorFuture)
+
+    val insertItemSummaryByCreatorFuture = session.prepare(s"""
+        INSERT INTO ${ItemRepository.itemSummaryByCreatorTable} (
+          ${ItemRepository.creatorId},
+          ${ItemRepository.itemId},
+          ${ItemRepository.title},
+          ${ItemRepository.currencyId},
+          ${ItemRepository.reservePrice},
+          ${ItemRepository.status}
         ) VALUES (?, ?, ?, ?, ?, ?)
       """)
-      updateItemStatus <- session.prepare("""
-        UPDATE itemSummaryByCreator SET status = ? WHERE creatorId = ? AND itemId = ?
+    insertItemSummaryByCreatorPromise.completeWith(insertItemSummaryByCreatorFuture)
+
+    val updateItemSummaryStatusFuture = session.prepare(s"""
+        UPDATE ${ItemRepository.itemSummaryByCreatorTable}
+          SET ${ItemRepository.status} = ?
+        WHERE
+          ${ItemRepository.creatorId} = ? AND ${ItemRepository.itemId} = ?
       """)
-    } yield {
-      insertItemCreatorStatement = insertItemCreator
-      insertItemSummaryByCreatorStatement = insertItemSummary
-      updateItemSummaryStatusStatement = updateItemStatus
-      Done
-    }
+    updateItemSummaryStatusPromise.completeWith(updateItemSummaryStatusFuture)
+
+    for {
+      _ <- insertItemCreatorFuture
+      _ <- insertItemSummaryByCreatorFuture
+      _ <- updateItemSummaryStatusFuture
+    } yield Done
   }
 
   private def insertItem(item: Item) = {
-    Future.successful(List(
-      insertItemCreator(item),
-      insertItemSummaryByCreator(item)
-    ))
+    for {
+      itemCreator <- doInsertItemCreator(item)
+      itemSummaryByCreator <- doInsertItemSummaryByCreator(item)
+    } yield List(itemCreator, itemSummaryByCreator)
   }
 
-  private def insertItemCreator(item: Item) = {
-    insertItemCreatorStatement.bind(item.id, item.creator)
+  private def doInsertItemCreator(item: Item) = {
+    insertItemCreator.map { ps =>
+      val bindInsertItemCreator = ps.bind()
+      bindInsertItemCreator.setUUID(ItemRepository.itemId, item.id)
+      bindInsertItemCreator.setUUID(ItemRepository.creatorId, item.creator)
+      bindInsertItemCreator
+    }
   }
 
-  private def insertItemSummaryByCreator(item: Item) = {
-    insertItemSummaryByCreatorStatement.bind(
-      item.creator,
-      item.id,
-      item.title,
-      item.currencyId,
-      Integer.valueOf(item.reservePrice),
-      item.status.toString
-    )
+  private def doInsertItemSummaryByCreator(item: Item) = {
+    insertItemSummaryByCreator.map { ps =>
+      val bindInsertItemSummaryByCreator = ps.bind()
+      bindInsertItemSummaryByCreator.setUUID(ItemRepository.creatorId, item.creator)
+      bindInsertItemSummaryByCreator.setUUID(ItemRepository.itemId, item.id)
+      bindInsertItemSummaryByCreator.setString(ItemRepository.title, item.title)
+      bindInsertItemSummaryByCreator.setString(ItemRepository.currencyId, item.currencyId)
+      bindInsertItemSummaryByCreator.setInt(ItemRepository.reservePrice, Integer.valueOf(item.reservePrice))
+      bindInsertItemSummaryByCreator.setString(ItemRepository.status, item.status.toString)
+      bindInsertItemSummaryByCreator
+    }
   }
 
-  private def updateItemSummaryStatus(itemId: String, status: api.ItemStatus.Status) = {
+  private def doUpdateItemSummaryStatus(itemId: String, status: api.ItemStatus.Status) = {
     val itemUuid = UUID.fromString(itemId)
-    selectItemCreator(itemUuid).map {
+    selectItemCreator(itemUuid).flatMap {
       case None => throw new IllegalStateException("No itemCreator found for itemId " + itemId)
       case Some(row) =>
-        val creatorId = row.getUUID("creatorId")
-        List(updateItemSummaryStatusStatement.bind(status.toString, creatorId, itemUuid))
+        val creatorId = row.getUUID(ItemRepository.creatorId)
+        updateItemSummaryStatus.map { ps =>
+          val bindUpdateItemSummaryStatus = ps.bind()
+          bindUpdateItemSummaryStatus.setString(ItemRepository.status, status.toString)
+          bindUpdateItemSummaryStatus.setUUID(ItemRepository.creatorId, creatorId)
+          bindUpdateItemSummaryStatus.setUUID(ItemRepository.itemId, itemUuid)
+          List(bindUpdateItemSummaryStatus)
+        }
     }
   }
 
   private def selectItemCreator(itemId: UUID) = {
-    session.selectOne("SELECT * FROM itemCreator WHERE itemId = ?", itemId)
+    session.selectOne(s"""
+      SELECT
+        *
+      FROM
+        ${ItemRepository.itemCreatorTable}
+      WHERE
+        ${ItemRepository.itemId} = ?""", itemId)
   }
+}
+
+object ItemRepository {
+  // Table
+  val itemEventOffset: String = "itemEventOffset"
+  val itemCreatorTable: String = "itemCreator"
+  val itemSummaryByCreatorTable: String = "itemSummaryByCreator"
+  val itemSummaryByCreatorAndStatusMV: String = "itemSummaryByCreatorAndStatus"
+
+  // Fields
+  val itemId: String = "itemId"
+  val creatorId: String = "creatorId"
+  val title: String = "title"
+  val currencyId: String = "currencyId"
+  val reservePrice: String = "reservePrice"
+  val status: String = "status"
 }

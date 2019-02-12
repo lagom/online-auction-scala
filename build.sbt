@@ -10,13 +10,13 @@ lazy val root = (project in file("."))
 organization in ThisBuild := "com.example"
 
 // the Scala version that will be used for cross-compiled libraries
-scalaVersion in ThisBuild := "2.12.4"
+scalaVersion in ThisBuild := "2.12.8"
 
 version in ThisBuild := "1.0.0-SNAPSHOT"
 
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
-val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % Test
+val macwire = "com.softwaremill.macwire" %% "macros" % "2.3.1" % "provided"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5" % Test
 val scalaTestPlusPlay = "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
 val mockito = "org.mockito" % "mockito-core" % "2.22.0" % Test
 
@@ -174,7 +174,7 @@ lazy val webGateway = (project in file("web-gateway"))
       "org.webjars" % "foundation-icon-fonts" % "d596a3cfb3"
     ),
     EclipseKeys.preTasks := Seq(compile in Compile),
-    httpIngressPaths := Seq("/")
+    rpHttpIngressPaths := Seq("/")
   )
 
 def commonSettings: Seq[Setting[_]] = Seq(

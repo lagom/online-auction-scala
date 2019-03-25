@@ -23,7 +23,7 @@ case class SearchItem(id: UUID,
                       creatorId: UUID,
                       title: String,
                       description: String,
-                      temStatus: String,
+                      itemStatus: String,
                       currencyId: String,
                       price: Option[Int]
                       // auctionStart:Option[Instant] // TODO: add auctionStart and AuctionEnd

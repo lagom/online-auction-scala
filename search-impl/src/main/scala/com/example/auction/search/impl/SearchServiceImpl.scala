@@ -6,6 +6,7 @@ import com.example.elasticsearch.IndexedItem
 import com.example.elasticsearch.request._
 import com.example.elasticsearch.response._
 import com.lightbend.lagom.scaladsl.api.ServiceCall
+import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -13,20 +14,12 @@ class SearchServiceImpl(indexedStore: IndexedStore[SearchResult]) extends Search
 
   override def search(pageNo: Int, pageSize: Int): ServiceCall[SearchRequest, SearchResponse] = ServiceCall {
     request =>
-      val filters: Seq[Filter] = {
-        Seq(Filters.keywords(request.keywords)) ++ Filters.maxPrice(request.maxPrice, request.currency)
-      }.flatten
+      val itemQuery = ItemQuery(request.keywords, request.maxPrice, request.currency, pageNo, pageSize)
 
-      val query = QueryRoot(
-        pageNo,
-        pageSize,
-        Query(BooleanQuery(Filters.STATUS_CREATED, filters))
-      )
-
-      indexedStore.search(query).map {
+      indexedStore.search(itemQuery).map {
         queryResult =>
           val items = toApi(queryResult)
-          SearchResponse(items, query.pageSize, query.pageNumber, queryResult.hits.total)
+          SearchResponse(items, itemQuery.pageSize, itemQuery.pageNumber, queryResult.hits.total)
       }
   }
 

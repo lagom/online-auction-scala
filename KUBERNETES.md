@@ -77,7 +77,7 @@ The `reactive-sandbox` allows you to easily test your deployment with Cassandra,
 
 ```bash
 helm init
-helm repo add lightbend-helm-charts https://lightbend.github.io/helm-charts
+helm repo add lightbend-helm-charts  https://repo.lightbend.com/helm-charts
 helm repo update
 ```
 

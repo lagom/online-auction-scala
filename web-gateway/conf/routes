@@ -16,4 +16,6 @@ GET         /item/:id                   controllers.ItemController.getItem(id: j
 POST        /item/:id/auction           controllers.ItemController.startAuction(id: java.util.UUID)
 POST        /item/:id/bid               controllers.ItemController.placeBid(id: java.util.UUID)
 
+GET         /search                     controllers.SearchController.searchForm
+POST        /search                     controllers.SearchController.search
 GET         /assets/*file               controllers.Assets.at(path = "/public", file)

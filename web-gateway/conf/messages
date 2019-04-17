@@ -20,6 +20,7 @@ createItem=Create item
 
 invalid.increment=The increment must be a multiple of 0.5.
 invalid.reserve=The reserve must be a multiple of 0.5.
+invalid.currency=Please enter a valid currency
 
 seller=Seller
 auctionStart=Auction start
@@ -69,3 +70,14 @@ items.caption={0} ({1})
 
 pagination.loadMore=Load more
 pagination.reload=Reload
+
+search=Search
+searchItems=Search Items
+instruction.search=Here you can search for auctioned items. You can filter your search by specifying the maximum price of items to search for and the currency to search in.
+instruction.enableSearch=Search functionality can be enabled by downloading and running a local instance of elasticsearch. Steps for doing this can be found in {0}. If the lagom system is up and running, you don''t need to restart the system after installing and running elasticsearch; the search service becomes functional once it starts.
+keywords=Exact terms:
+maximumPrice=Maximum Price (set to '0' to disable filter)
+currency=
+searchFoundCount={0} items found
+searchFoundCountWithPagination=Displaying {0} - {1} of {2} items found
+nextResultPage=More

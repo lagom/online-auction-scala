@@ -6,7 +6,6 @@ import com.example.elasticsearch.IndexedItem
 import com.example.elasticsearch.request._
 import com.example.elasticsearch.response._
 import com.lightbend.lagom.scaladsl.api.ServiceCall
-import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

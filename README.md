@@ -1,3 +1,5 @@
+This sample application is archived. See https://github.com/lagom/lagom-samples for more Example projects showcasing Lagom usage.
+
 [<img src="docs/logo.png" alt="Lagom" width="50%">](https://github.com/lagom/lagom)
 
 [![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/lagom/lagom?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [<img src="https://img.shields.io/travis/lagom/lagom.svg"/>](https://travis-ci.org/lagom/lagom)
